@@ -29,7 +29,7 @@ class CollectorTests(unittest.TestCase):
         record=refresh.parse_chart(p,'TEST','Test',now=last)
         self.assertEqual(record['price'],358)  # Current day (359) excluded.
         self.assertTrue(record['newHigh'])
-        self.assertEqual(len(record['history']),64)
+        self.assertEqual(len(record['history']),253)
         self.assertAlmostEqual(record['monthReturn'],(358/337-1)*100)
         self.assertAlmostEqual(record['change'],(358/357-1)*100)
 
@@ -86,6 +86,23 @@ class CollectorTests(unittest.TestCase):
         with patch.object(refresh,'fetch',side_effect=[{'data':{'totalrecords':2}},{'data':{'rows':[{'symbol':'AAA'}]}}]):
             with self.assertRaises(ValueError):
                 refresh.screener()
+
+    def test_breadth_and_regime(self):
+        candidates=[
+            {'change':1.0,'history':[{}]*253,'above20':True,'above50':True,'above200':True,'newHigh':True,'newLow':False},
+            {'change':-1.0,'history':[{}]*253,'above20':False,'above50':False,'above200':False,'newHigh':False,'newLow':True},
+            {'change':2.0,'history':[{}]*253,'above20':True,'above50':True,'above200':True,'newHigh':False,'newLow':False},
+        ]
+        breadth=refresh.build_breadth(candidates)
+        self.assertEqual(breadth['advancers'],2)
+        self.assertEqual(breadth['decliners'],1)
+        self.assertAlmostEqual(breadth['above50'],200/3)
+        out={'indices':[{'symbol':'^IXIC','change':1},{'symbol':'^SOX','change':2}],
+             'assets':[{'symbol':'^VIX','change':-3}],
+             'breadth':breadth,'rates':{'tenYear':{'change':0.05}}}
+        regime=refresh.build_regime(out)
+        self.assertEqual(regime['label'],'RISK ON')
+        self.assertIn('반도체',regime['summary'])
 
     def test_failed_run_preserves_snapshot(self):
         with tempfile.TemporaryDirectory() as directory:
