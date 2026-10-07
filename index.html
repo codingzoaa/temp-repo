@@ -13,7 +13,7 @@
       <a class="active" href="#overview">◈ <span>데일리 브리핑</span></a>
       <a href="#regime">◎ <span>Market Regime</span></a>
       <a href="#rates">⌁ <span>금리 & 매크로</span></a>
-      <a href="#sectors">▦ <span>Sector Rotation</span></a>
+      <a href="#rotation">▦ <span>Sector Rotation</span></a>
       <a href="#breadth">≋ <span>Market Breadth</span></a>
       <a href="#volume">▤ <span>거래대금 TOP 10</span></a>
       <a href="#leaders">↗ <span>시장 주도주</span></a>
@@ -32,6 +32,7 @@
 
     <div class="notice"><span>ⓘ</span> 무료 시장 데이터 연결 대기 중입니다. 수집 전에는 시세를 표시하지 않습니다.</div>
 
+    <section class="daily-grid"><article id="market-summary" class="panel"></article><article id="fear-greed" class="panel"></article></section>
     <section id="regime" class="regime-shell">
       <div class="section-heading"><h2>Market Regime <span>RISK ENVIRONMENT</span></h2><span class="subtle">주가·SOX·VIX·Breadth 종합</span></div>
       <div id="regime-card" class="regime-card empty-card">데이터 수집 후 시장 국면을 표시합니다.</div>
@@ -48,11 +49,7 @@
       <div id="assets" class="asset-grid"></div>
     </section>
 
-    <section id="sectors" class="panel">
-      <div class="panel-heading"><div><h2>Sector Rotation</h2><p>미국 대표 섹터 ETF · 1D / 1W / 1M 상대 흐름</p></div><span class="tag">ROTATION</span></div>
-      <div id="sector-grid" class="sector-grid"></div>
-      <div class="panel-note">ETF 종가 수익률 기준. 섹터 강도는 1개월 수익률 순으로 정렬합니다.</div>
-    </section>
+    <section id="rotation" class="panel"><div class="panel-heading"><div><h2>Sector Rotation</h2><p>미국 대표 섹터 ETF · SPY 대비 상대 흐름</p></div><div class="sector-sort" aria-label="섹터 정렬 기간"><button class="selected" data-sector-period="1D">1D</button><button data-sector-period="1W">1W</button><button data-sector-period="1M">1M</button></div></div><div id="sector-table"></div><details class="method"><summary>상태값과 상대 흐름을 읽는 법</summary><p>수익률 아래 값은 SPY 대비 초과 수익률(%p)입니다. 기간은 1 / 5 / 21거래일입니다. 🔥 신규 강세: 당일 상대 수익률이 양수이고 전일 음수·보합에서 전환하거나 최근 3일 평균이 직전 3일보다 0.25%p 이상 가속. ↑ 강세 지속: 2거래일 이상 연속 SPY 상회. ↓ 약화: 당일 SPY를 하회하고 전일 대비 상대 수익률 하락. → 유지: 그 외. 상태는 선택한 정렬 기간과 무관하게 최신 일별 흐름으로 판정합니다. SOXX는 XLK와 일부 종목이 겹치는 반도체 테마입니다.</p></details></section>
 
     <section id="breadth" class="panel">
       <div class="panel-heading"><div><h2>Market Breadth</h2><p>시총 $10B 이상 수집 종목 기준 · 시장 내부 체력</p></div><span class="tag green">BREADTH</span></div>
@@ -85,6 +82,6 @@
     <p id="data-status" class="panel-note" role="status">시세 파일 확인 중…</p>
     <footer><span><b>Market Brief.</b> 매일의 시장을 읽는 습관</span><span>U.S. Treasury / Yahoo Finance / Nasdaq · 일별 지연 데이터</span></footer>
   </main>
-  <script src="app.js"></script>
+  <script src="app.js"></script><script src="dashboard.js"></script>
 </body>
 </html>

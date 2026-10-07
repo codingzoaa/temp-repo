@@ -107,7 +107,7 @@ class CollectorTests(unittest.TestCase):
     def test_failed_run_preserves_snapshot(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);(root/'data').mkdir();snapshot=root/'data/market.json';snapshot.write_text('last good data')
-            with patch.object(refresh,'ROOT',root),patch.object(refresh,'get_chart',side_effect=RuntimeError('blocked')),patch.object(refresh,'screener',side_effect=RuntimeError('blocked')):
+            with patch.object(refresh,'ROOT',root),patch.object(refresh,'get_chart',side_effect=RuntimeError('blocked')),patch.object(refresh,'screener',side_effect=RuntimeError('blocked')),patch.object(refresh,'treasury_rates',side_effect=RuntimeError('blocked')):
                 self.assertEqual(refresh.main(),1)
             self.assertEqual(snapshot.read_text(),'last good data')
 

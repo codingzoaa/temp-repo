@@ -30,11 +30,14 @@ jobs:
           node tests/test_ui.cjs
       - name: Fetch free daily data
         run: python3 scripts/refresh_data.py
+      - name: Fetch sector rotation and market sentiment
+        run: python3 scripts/refresh_briefing.py
       - name: Assemble static site
         run: |
           mkdir -p public/data
-          cp index.html style.css app.js public/
+          cp index.html style.css app.js dashboard.js public/
           cp data/market.json public/data/
+          cp data/briefing.json public/data/
       - uses: actions/configure-pages@v5
         with:
           enablement: true

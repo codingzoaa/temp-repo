@@ -13,11 +13,12 @@ function chart(history=[],mini=false){
  if(points.length<2)return '<span class="subtle">추이 데이터 없음</span>';
  const values=points.map(p=>p.close),low=Math.min(...values),high=Math.max(...values),range=high-low;
  const pts=values.map((v,i)=>[i/(values.length-1)*200,range?70-(v-low)/range*60:40]);
- const color=values.at(-1)>=values[0]?'#49d7ae':'#f47c8a';
- return `<svg class="${mini?'mini-chart':'chart'}" viewBox="0 0 200 80" preserveAspectRatio="none" role="img" aria-label="${esc(points[0].date)}부터 ${esc(points.at(-1).date)}까지 종가 추이"><polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="${color}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+ const color=values.at(-1)>=values[0]?'#d95761':'#15846e';
+ return `<svg class="${mini?'mini-chart':'chart'}" viewBox="0 0 200 80" preserveAspectRatio="none" role="img" aria-label="${esc(points[0].date)}부터 ${esc(points.at(-1).date)}까지 종가 추이"><path d="M0 80 L${pts.map(p=>p.join(' ')).join(' L')} L200 80 Z" fill="${color}" opacity=".10"/><polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="${color}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
 }
 function stockLabel(s){return `<div class="stock"><span class="stock-icon">${esc(s.symbol.slice(0,2))}</span><div><strong>${esc(s.symbol)}</strong><small>${esc(s.name)}${s.date?' · '+esc(s.date):''}</small></div></div>`;}
-function cards(items){return items.map(s=>`<article class="card"><div class="card-label">${esc(s.name)}<small>${esc(s.symbol)}</small></div><div class="value">${s.kind==='usd'?money(s.price):finite(s.price)?s.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+(s.kind==='yield'?'%':''):'—'}</div><div class="change ${cls(s.change)}">${signed(s.kind==='yield'?s.changePoints:s.change)}${s.kind==='yield'?'%p':'%'} <span class="subtle">일간</span></div>${chart(s.history)}<p class="subtle">${esc(s.date)} · ${esc(s.source)}</p></article>`).join('');}
+function periodValue(s,n){const h=s.history||[];if(h.length<n+1)return null;const current=h.at(-1).close,previous=h.at(-n-1).close;return s.kind==='yield'?current-previous:(current/previous-1)*100;}
+function cards(items){return items.map(s=>`<article class="card"><div class="card-label">${esc(s.name)}</div><div class="card-meta">${esc(s.symbol)} · ${esc(s.date)}</div><div class="value">${s.kind==='usd'?money(s.price):finite(s.price)?s.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+(s.kind==='yield'?'%':''):'—'}</div><div class="change ${cls(s.change)}">${s.change>=0?'▲':'▼'} ${signed(s.changePoints)}${s.kind==='yield'?'%p':` (${signed(s.change)}%)`}</div>${chart(s.history)}<div class="return-strip">${[[5,'1주'],[21,'1개월'],[63,'3개월']].map(([n,label])=>{const v=periodValue(s,n);return `<div><span>${label}</span><strong class="${cls(v)}">${signed(v)}${finite(v)?s.kind==='yield'?'%p':'%':''}</strong></div>`;}).join('')}</div></article>`).join('');}
 function renderRegime(){
  const r=data.regime||{};
  const el=document.querySelector('#regime-card');
@@ -30,7 +31,7 @@ function renderRates(){
  const list=[data.rates?.twoYear,data.rates?.tenYear,data.rates?.spread].filter(Boolean);
  document.querySelector('#rates-grid').innerHTML=list.length?cards(list):'<p class="panel-note">금리 데이터 미수집</p>';
 }
-function renderSectors(){
+function renderLegacySectors(){
  const rows=[...(data.sectors||[])].sort((a,b)=>(b.monthReturn??-Infinity)-(a.monthReturn??-Infinity));
  document.querySelector('#sector-grid').innerHTML=rows.map((s,i)=>`<article class="sector-card"><div class="sector-rank">${String(i+1).padStart(2,'0')}</div><div><strong>${esc(s.name)}</strong><span>${esc(s.symbol)}</span></div><dl><dt>1D</dt><dd class="${cls(s.change)}">${signed(s.change)}%</dd><dt>1W</dt><dd class="${cls(s.weekReturn)}">${signed(s.weekReturn)}%</dd><dt>1M</dt><dd class="${cls(s.monthReturn)}">${signed(s.monthReturn)}%</dd></dl></article>`).join('')||'<div class="panel-note">섹터 데이터 미수집</div>';
 }
@@ -61,8 +62,9 @@ function render(){
  document.querySelector('#indices').innerHTML=cards(data.indices)||'<p>지수 데이터 미수집</p>';
  renderRates();
  document.querySelector('#assets').innerHTML=cards(data.assets)||'<p>주요 자산 데이터 미수집</p>';
- renderSectors();renderBreadth();renderVolume();
- document.querySelector('#leader-list').innerHTML=data.leaders.map(s=>`<div class="leader">${stockLabel(s)}<div class="leader-bar"><span style="width:${Math.min(100,Math.max(0,s.monthReturn))}%"></span></div><strong style="color:${s.monthReturn>=0?'var(--green)':'var(--red)'}">${signed(s.monthReturn)}%</strong></div>`).join('')||'<div class="panel-note">주도주 데이터 미수집</div>';
+ if(document.querySelector('#sector-grid'))renderLegacySectors();renderBreadth();renderVolume();
+ if(typeof renderDashboard==='function')renderDashboard();
+ document.querySelector('#leader-list').innerHTML=data.leaders.map(s=>`<div class="leader">${stockLabel(s)}<div class="leader-bar"><span style="width:${Math.min(100,Math.max(0,s.monthReturn))}%"></span></div><strong style="color:${s.monthReturn>=0?'var(--up)':'var(--down)'}">${signed(s.monthReturn)}%</strong></div>`).join('')||'<div class="panel-note">주도주 데이터 미수집</div>';
  document.querySelector('#high-body').innerHTML=data.highs.map(s=>`<tr><td>${stockLabel(s)}</td><td>${money(s.price)}</td><td>${scale(s.marketCap)}</td><td class="${cls(s.change)}">${signed(s.change)}%</td></tr>`).join('')||'<tr><td colspan="4">'+(data.universe?.complete?'해당 종목 없음':'전체 종목 검증 미완료 · 수집된 신고가 없음')+'</td></tr>';
 }
 function validate(snapshot){
