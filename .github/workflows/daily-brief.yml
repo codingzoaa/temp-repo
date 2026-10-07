@@ -4,8 +4,8 @@ on:
     branches: [main]
   workflow_dispatch:
   schedule:
-    # 19:15 KST, Tuesday-Saturday, after the previous US trading session.
-    - cron: '15 10 * * 2-6'
+    # 07:15 KST, Tuesday-Saturday = 22:15 UTC, Monday-Friday.
+    - cron: '15 22 * * 1-5'
 permissions:
   contents: read
   pages: write

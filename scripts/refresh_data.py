@@ -35,7 +35,9 @@ def parse_chart(payload, symbol, name, kind="usd", now=None):
         raise ValueError(f"{symbol}: chart unavailable")
     result = chart["result"][0]
     timezone = ZoneInfo(result["meta"].get("exchangeTimezoneName", "America/New_York"))
-    today = (now or dt.datetime.now(dt.timezone.utc)).astimezone(timezone).date()
+    local_now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(timezone)
+    today = local_now.date()
+    completed_today = symbol not in {"CL=F", "GC=F", "BTC-USD"} and local_now.hour >= 18
     indicators = result["indicators"]
     quote = indicators["quote"][0]
     closes, volumes = quote.get("close", []), quote.get("volume", [])
@@ -45,8 +47,9 @@ def parse_chart(payload, symbol, name, kind="usd", now=None):
         date = dt.datetime.fromtimestamp(timestamp, timezone).date()
         close = number(closes[i]) if i < len(closes) else None
         adj = number(adjusted[i]) if i < len(adjusted) else None
-        # Conservatively exclude today's bar, including continuously traded assets.
-        if date >= today or close is None or close <= 0:
+        # US equity/index close is final after 18:00 local, with a publication buffer.
+        # Futures and crypto continue to exclude the current exchange calendar day.
+        if date > today or (date == today and not completed_today) or close is None or close <= 0:
             continue
         history.append({"date": date.isoformat(), "close": close,
                         "adjusted": adj if adj is not None and adj > 0 else close,
@@ -64,15 +67,19 @@ def parse_chart(payload, symbol, name, kind="usd", now=None):
             "highHistoryComplete": len(history) >= 253, "source": "Yahoo Finance"}
 
 def get_chart(symbol, name, kind="usd"):
+    local_now = dt.datetime.now(ZoneInfo("America/New_York"))
+    session_key = f"{local_now.date()}:{local_now.hour >= 18}:v2"
     cache = ROOT / "data" / "cache" / (hashlib.sha256(symbol.encode()).hexdigest() + ".json")
     if cache.exists() and time.time() - cache.stat().st_mtime < 6 * 3600:
         cached = json.loads(cache.read_text(encoding="utf-8"))
-        cached.update(name=name, kind=kind)
-        return cached
+        if cached.get("sessionKey") == session_key:
+            cached.update(name=name, kind=kind)
+            return cached
     # Nasdaq uses BRK/A and BRK/B; Yahoo uses BRK-A and BRK-B.
     yahoo_symbol = symbol.replace("/", "-")
     url = "https://query1.finance.yahoo.com/v8/finance/chart/" + urllib.parse.quote(yahoo_symbol, safe="")
     record = parse_chart(fetch(url + "?range=2y&interval=1d"), symbol, name, kind)
+    record["sessionKey"] = session_key
     cache.parent.mkdir(parents=True,exist_ok=True)
     cache.write_text(json.dumps(record,ensure_ascii=False,allow_nan=False),encoding="utf-8")
     return record

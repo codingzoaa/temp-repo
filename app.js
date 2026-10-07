@@ -43,7 +43,7 @@ async function load(){
   document.querySelector('.mode').textContent=stale?'STALE DATA':data.warnings.length?'PARTIAL DATA':'DAILY DATA';
   document.querySelector('.date').innerHTML=`<span>최근 수집 · 한국 시간</span><strong>${esc(new Date(data.generatedAt).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}))}</strong><span>각 자산 관측일은 카드 참조 · 실시간 아님</span>`;
   document.querySelector('.sidebar-bottom').innerHTML='<span class="status-dot"></span> 무료 일별 데이터<p>Yahoo Finance / Nasdaq</p>';
-  const u=data.universe;document.querySelector('.notice').textContent=`${stale?'⚠ 갱신 후 36시간이 지난 데이터입니다. ':''}${data.warnings.length?'⚠ 일부 수집 실패. ':''}Yahoo Finance 일봉 / Nasdaq 스크리너. 오늘 진행 중인 일봉 제외. 거래대금은 스크리너 가격 × 거래량 추정치이며 일봉 종가와 관측 시점이 다릅니다. 스크리너 관측: ${data.stocks[0]?.screenerAsOf||'시각 미제공'}. 시총 $10B 이상 ${u.fetched}/${u.eligible}종목 분석. ${u.complete?'':'신고가 목록은 전체 검증 미완료. '}`;
+  const u=data.universe;document.querySelector('.notice').textContent=`${stale?'⚠ 갱신 후 36시간이 지난 데이터입니다. ':''}${data.warnings.length?'⚠ 일부 수집 실패. ':''}Yahoo Finance 일봉 / Nasdaq 스크리너. 미국 장 마감 후 완료 일봉 기준 · 선물/비트코인 당일 일봉 제외. 거래대금은 스크리너 가격 × 거래량 추정치이며 일봉 종가와 관측 시점이 다릅니다. 스크리너 관측: ${data.stocks[0]?.screenerAsOf||'시각 미제공'}. 시총 $10B 이상 ${u.fetched}/${u.eligible}종목 분석. ${u.complete?'':'신고가 목록은 전체 검증 미완료. '}`;
   document.querySelector('#data-status').textContent=data.warnings.length?'수집 경고: '+data.warnings.join(' / '):'전체 수집 완료 · 시세는 지연될 수 있습니다.';
  }catch(error){
   document.querySelector('.mode').textContent='NO DATA';document.querySelector('.notice').textContent='실제 데이터 연결 대기: '+error.message+' 네트워크 설정 적용 후 수집기를 실행해야 합니다. 예시 수치는 표시하지 않습니다.';
