@@ -1,12 +1,33 @@
 let briefing={sectors:[],fearGreed:null};let sectorPeriod='1D';
 const stateLabels={new:'🔥 신규 강세',strong:'↑ 강세 지속',steady:'→ 유지',weak:'↓ 약화'};
-function renderSummary(){
- const indices=data.indices.filter(s=>finite(s.change));
- const sorted=[...indices].sort((a,b)=>b.change-a.change);
- const positive=indices.filter(s=>s.change>0).length;
- const leaders=[...(briefing.sectors||[])].sort((a,b)=>b.periods['1W'].relative-a.periods['1W'].relative);
- document.querySelector('#market-summary').innerHTML=`<div class="summary-title"><div class="eyebrow">DAILY PULSE</div><h2>오늘의 시장 요약</h2><span>완료 종가에 기반한 데이터 브리핑</span></div>${indices.length?`<h3>${positive===indices.length?'주요 지수 모두 상승':positive===0?'주요 지수 전반 하락':`주요 지수 ${indices.length}개 중 ${positive}개 상승`}</h3><div class="summary-lines"><p><b>지수 흐름</b><span>${esc(sorted[0].name)} ${signed(sorted[0].change)}% · ${esc(sorted.at(-1).name)} ${signed(sorted.at(-1).change)}%</span></p>${leaders.length?`<p><b>섹터 주도</b><span>${esc(leaders[0].korean)}(${esc(leaders[0].symbol)}) · 1주 SPY 대비 ${signed(leaders[0].periods['1W'].relative)}%p</span></p>`:''}<p><b>관측일</b><span>${esc(indices[0].date)} 미국장 · 자산별 날짜는 카드 참조</span></p></div>`:'<p>시장 데이터 연결 대기 중입니다.</p>'}`;
+let newsBrief={topics:[],koreaIndices:[]};
+function sourceTime(value){const date=new Date(value);return Number.isFinite(date.getTime())?date.toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}):'시각 미제공';}
+function safeNewsUrl(value){try{const u=new URL(value);return u.protocol==='https:'&&u.hostname==='news.google.com'?u.href:null;}catch{return null;}}
+function topicMarket(key){
+ let items=[];
+ if(key==='korea')items=newsBrief.koreaIndices||[];
+ if(key==='us')items=data.indices.filter(s=>['^GSPC','^IXIC'].includes(s.symbol));
+ if(items.length)return `<div class="brief-market">${items.map(s=>`<span><b>${esc(s.name)}</b> <strong class="${cls(s.change)}">${signed(s.change)}%</strong><small>${esc(s.date)} 종가</small></span>`).join('')}</div>`;
+ const symbol=key==='ai'?'SOXX':key==='datacenter'?'XLU':null;
+ const sector=briefing.sectors?.find(s=>s.symbol===symbol);
+ return sector?`<div class="brief-market"><span><b>${key==='ai'?'반도체 ETF':'유틸리티 ETF'} ${symbol}</b> <strong class="${cls(sector.periods['1D'].return)}">${signed(sector.periods['1D'].return)}%</strong><small>${esc(sector.date)} · SPY 대비 ${signed(sector.periods['1D'].relative)}%p</small></span></div>`:'';
 }
+function newsItems(items){return items.map(article=>{const url=safeNewsUrl(article.url);return `<li>${url?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(article.title)} <span aria-hidden="true">↗</span></a>`:`<span>${esc(article.title)}</span>`}<div class="brief-source">${esc(article.publisher)} · ${esc(sourceTime(article.publishedAt))} KST</div></li>`;}).join('');}
+function priorityBrief(){
+ const issues=newsBrief.priorities||[];if(!issues.length)return '';
+ const themes=[...new Set(issues.slice(0,3).map(a=>a.context?.themeLabel||a.topic))];
+ const opening='오늘의 확인 순서는 '+themes.join(' → ')+'입니다. 발표가 실제 수주·매출로 이어지는지, 금리·전력 비용이 사업성에 어떤 영향을 주는지 함께 봅니다.';
+ return `<div class="brief-today"><span>오늘 먼저 볼 이슈</span><p>${esc(opening)}</p></div><div class="priority-heading"><h3>핵심 이슈 TOP ${issues.length}</h3><span>실적·수주·금리·정책 관련 보도 우선</span></div><div class="priority-list">${issues.map((article,i)=>{const c=article.context||{},url=safeNewsUrl(article.url);return `<details class="priority-issue" ${i===0?'open':''}><summary><span class="priority-rank">${i+1}</span><div><small>${esc(article.topic)} · ${esc(c.themeLabel||'시장 흐름')}${article.cached?' · 이전 수집값':''}</small><h4>${esc(article.title)}</h4></div><span class="expand-sign" aria-hidden="true">＋</span></summary><div class="priority-body"><div class="brief-source">${esc(article.publisher)} · ${esc(sourceTime(article.publishedAt))} KST ${url?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">기사 원문 ↗</a>`:''}</div><div class="issue-why"><b>왜 중요한가 · 산업 관점</b><p>${esc(c.why||'기사 원문과 가격 반응을 함께 확인하세요.')}</p></div>${c.companies?.length?`<div class="issue-watch"><b>연결해서 볼 기업·업종</b><div>${c.companies.map(name=>`<span>${esc(name)}</span>`).join('')}</div></div>`:''}<div class="issue-risk"><b>반대편 리스크</b><p>${esc(c.risk||'실제 계약·실적 변화의 확인이 필요합니다.')}</p></div><div class="issue-confirm"><b>오늘의 체크</b><p>${esc(c.confirm||'발표와 확정된 자료를 구분해 확인하세요.')}</p></div></div></details>`;}).join('')}</div>`;
+}
+function valueChainBrief(){
+ const chain=newsBrief.valueChain||[];if(!chain.length)return '';
+ return `<div class="value-chain-brief"><h3>AI 밸류체인 연결해서 보기</h3><p>최근 수집 기사에 등장한 분야 · 수혜 강도나 매수 순위가 아닙니다</p><div class="chain-stages">${chain.map(stage=>`<span class="${stage.count?'mentioned':''}"><b>${esc(stage.label)}</b><small>${stage.count?stage.count+'개 기사':'관련 기사 없음'}</small></span>`).join('')}</div><div class="chain-check">투자 발표 → 확정 수주 → 전력·인허가 → 가동 → 매출·현금흐름의 순서로 확인하세요.</div></div>`;
+}
+function renderSummary(){
+ const defaults=[['korea','한국 주식'],['us','미국 주식'],['ai','AI · 반도체'],['datacenter','데이터센터 · 전력']];
+ document.querySelector('#market-summary').innerHTML=`<div class="briefing-heading"><div><div class="eyebrow">MORNING INVESTMENT BRIEF</div><h2>오늘의 시장 브리핑</h2><p>한국·미국 주식·AI·데이터센터</p></div><span class="brief-update">${newsBrief.generatedAt?'수집 '+esc(sourceTime(newsBrief.generatedAt))+' KST':'뉴스 연결 확인 중'}</span></div>${priorityBrief()}<div class="topic-group-heading">분야별 시장 흐름</div><div class="news-topic-grid">${defaults.map(([key,label],index)=>{const topic=newsBrief.topics.find(t=>t.key===key)||{articles:[]};const articles=topic.articles||[];return `<article class="news-topic"><div class="news-topic-heading"><span class="topic-number">${String(index+1).padStart(2,'0')}</span><h3>${label}</h3>${topic.cached?'<span class="cached-label">이전 수집값</span>':''}</div>${topicMarket(key)}<div class="news-label">최근 주요 기사</div>${articles.length?`<ul class="brief-news-list">${newsItems(articles.slice(0,1))}</ul>${articles.length>1?`<details class="more-news"><summary>관련 기사 더 보기</summary><ul class="brief-news-list">${newsItems(articles.slice(1))}</ul></details>`:''}`:'<p class="news-unavailable">최근 기사를 아직 가져오지 못했습니다.</p>'}${topic.checkpoint?`<div class="brief-checkpoint"><b>체크포인트</b><p>${esc(topic.checkpoint)}</p></div>`:''}</article>`;}).join('')}</div>${valueChainBrief()}<details class="briefing-method"><summary>브리핑 기준·출처</summary><p>기사 제목과 원문 링크를 수집해 실적·수주·금리·정책 등의 이슈를 우선 정렬합니다. 보도 제목은 사실 출처이며, 산업 관점·관찰 기업·리스크는 해당 주제의 일반적인 연결 관계입니다. 기사 본문을 요약한 문장이나 개별 기업의 확정 수혜 판정은 아닙니다. 가격 정보는 완료 종가 기준이며 기사 발행 시각과 다를 수 있습니다. 체크포인트는 각 분야에서 확인할 일반적인 항목입니다. 데이터센터의 유틸리티 ETF는 전력 섹터의 참고 지표이며 데이터센터 전체 업종을 대표하지 않습니다. ${esc(newsBrief.method||'')}</p>${newsBrief.warnings?.length?`<p>수집 상태: ${esc(newsBrief.warnings.join(' / '))}</p>`:''}</details>`;
+}
+async function loadNews(){try{const response=await fetch('data/news.json',{cache:'no-store'});if(!response.ok)throw new Error('No news');const snapshot=await response.json();if(!Array.isArray(snapshot.topics))throw new Error('Invalid news');newsBrief=snapshot;}catch{newsBrief={topics:[],koreaIndices:[]};}renderSummary();}
 function renderFear(){
  const fg=briefing.fearGreed;const el=document.querySelector('#fear-greed');
  const title='<div class="sentiment-head"><div><div class="eyebrow">MARKET SENTIMENT</div><h2>Fear & Greed Index</h2></div><a href="https://edition.cnn.com/markets/fear-and-greed" target="_blank" rel="noopener noreferrer">CNN 원문 ↗</a></div>';
@@ -28,4 +49,4 @@ async function loadBriefing(){
  try{const response=await fetch('data/briefing.json',{cache:'no-store'});if(!response.ok)throw new Error('No briefing data');const snapshot=await response.json();if(!Array.isArray(snapshot.sectors))throw new Error('Invalid briefing');briefing=snapshot;}catch(error){briefing={sectors:[],fearGreed:null};}
  renderDashboard();
 }
-renderDashboard();loadBriefing();
+renderDashboard();loadBriefing();loadNews();

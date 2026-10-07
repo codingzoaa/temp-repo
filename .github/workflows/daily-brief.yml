@@ -32,12 +32,15 @@ jobs:
         run: python3 scripts/refresh_data.py
       - name: Fetch sector rotation and market sentiment
         run: python3 scripts/refresh_briefing.py
+      - name: Fetch Korea US AI and data center briefing
+        run: python3 scripts/refresh_news.py
       - name: Assemble static site
         run: |
           mkdir -p public/data
           cp index.html style.css app.js dashboard.js public/
           cp data/market.json public/data/
           cp data/briefing.json public/data/
+          cp data/news.json public/data/
       - uses: actions/configure-pages@v5
         with:
           enablement: true
