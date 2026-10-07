@@ -263,8 +263,8 @@ def main():
         out["warnings"].append(f"Nasdaq: {error}")
     out["regime"]=build_regime(out)
     destination = ROOT / "data" / "market.json"
-    if not (out["indices"] or out["assets"] or out["stocks"]) or (request_failed and destination.exists()):
-        print("Refresh failed/partial; existing snapshot preserved.", file=sys.stderr)
+    if not (out["indices"] or out["assets"] or out["stocks"]):
+        print("Refresh failed; existing snapshot preserved.", file=sys.stderr)
         for warning in out["warnings"]:
             print(warning, file=sys.stderr)
         return 1
