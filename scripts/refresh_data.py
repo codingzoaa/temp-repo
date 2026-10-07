@@ -15,7 +15,7 @@ import xml.etree.ElementTree as ET
 from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
-INDEX = [("^GSPC", "S&P 500"), ("^IXIC", "나스닥 종합"), ("^SOX", "필라델피아 반도체"), ("^RUT", "러셀 2000")]
+INDEX = [("^GSPC", "S&P 500"), ("^IXIC", "나스닥 종합"), ("^DJI", "다우 존스"), ("^RUT", "러셀 2000"), ("^SOX", "필라델피아 반도체")]
 ASSETS = [("^VIX", "VIX 변동성 지수", "index"), ("CL=F", "WTI 근월물 선물", "usd"),
           ("GC=F", "금 근월물 선물", "usd"), ("BTC-USD", "비트코인", "usd")]
 SECTORS = [("XLK","Technology"),("XLC","Communication"),("XLY","Consumer Discretionary"),
