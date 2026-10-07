@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Brief — 투자 데일리 브리핑</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="sidebar"><a class="brand" href="#"><span class="brand-icon">M</span>Market Brief<span class="brand-dot">.</span></a><div class="side-label">WORKSPACE</div><nav><a class="active" href="#overview">◈ <span>데일리 브리핑</span></a><a href="#indicators">⌁ <span>주요 지표</span></a><a href="#volume">▤ <span>거래대금 TOP 10</span></a><a href="#leaders">↗ <span>시장 주도주</span></a><a href="#highs">◎ <span>52주 신고가</span></a></nav><div class="sidebar-bottom"><span class="status-dot"></span> 무료 데이터 연결 대기<p>미국 시장 · USD 기준</p></div></aside>
+  <main>
+    <header><div class="breadcrumb">WORKSPACE <span>/</span> 데일리 브리핑</div><span class="mode">NO DATA</span></header>
+    <section id="overview" class="intro"><div><div class="eyebrow">YOUR DAILY MARKET PULSE</div><h1>시장의 흐름을, 한눈에.</h1><p>미국 증시와 주요 자산의 움직임을 모아보는 데일리 브리핑</p></div><div class="date"><span>최근 수집</span><strong>연결 대기</strong><span>일별 데이터 · 실시간 아님</span></div></section>
+    <div class="notice"><span>ⓘ</span> 무료 시장 데이터 연결 대기 중입니다. 수집 전에는 시세를 표시하지 않습니다.</div>
+    <section><div class="section-heading"><h2>미국 주요 지수 <span>MARKET OVERVIEW</span></h2><div class="periods" aria-label="차트 기간"><button data-period="1W">1주</button><button class="selected" data-period="1M">1개월</button><button data-period="3M">3개월</button></div></div><div id="indices" class="index-grid"></div></section>
+    <section id="indicators"><div class="section-heading"><h2>매크로 & 주요 자산 <span>MACRO & ASSETS</span></h2><span class="subtle">선택 기간의 일별 종가 추이</span></div><div id="assets" class="asset-grid"></div></section>
+    <section id="volume" class="panel"><div class="panel-heading"><div><h2>미국 추정 거래대금 TOP 10</h2><p>나스닥 스크리너 가격 × 거래량 · 수집 시점 추정 순위</p></div><label class="search"><span>⌕</span><input id="search" type="search" placeholder="종목명 또는 티커 검색" aria-label="거래대금 종목 검색"></label></div><div class="table-scroll"><table><thead><tr><th>순위</th><th>종목</th><th>종가</th><th>일간 등락</th><th>추정 거래대금</th><th>선택 기간 추이</th></tr></thead><tbody id="volume-body"></tbody></table></div><div id="empty" hidden>검색 결과가 없습니다.</div></section>
+    <div class="bottom-grid"><section id="leaders" class="panel"><div class="panel-heading"><div><h2>미국 시장 주도주</h2><p>시총 $10B 이상 · 21거래일 수정 종가 수익률</p></div><span class="tag">MOMENTUM</span></div><div id="leader-list"></div><div class="panel-note">주도주 기준: 시총 $10B 이상 종목 중 21거래일 수정 종가 수익률 내림차순.</div></section><section id="highs" class="panel"><div class="panel-heading"><div><h2>52주 신고가 <small class="subtle">종가 기준</small></h2><p>시가총액 $10B 이상 · 시총 내림차순</p></div><span class="tag green">NEW HIGH</span></div><div class="table-scroll"><table><thead><tr><th>종목</th><th>종가</th><th>시가총액</th><th>등락</th></tr></thead><tbody id="high-body"></tbody></table></div><div class="panel-note">수정 종가 ≥ 이전 252거래일 최고 수정 종가. 각 종목 최신 완료 일봉 기준.</div></section></div>
+    <p id="data-status" class="panel-note" role="status">시세 파일 확인 중…</p><footer><span><b>Market Brief.</b> 매일의 시장을 읽는 습관</span><span>Yahoo Finance / Nasdaq · 일별 지연 데이터</span></footer>
+  </main><script src="app.js"></script>
+</body></html>
