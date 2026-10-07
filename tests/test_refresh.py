@@ -48,6 +48,11 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(refresh.parse_chart(p,'TEST','Test',now=after_close)['price'],359)
         self.assertEqual(refresh.parse_chart(p,'BTC-USD','Bitcoin',now=after_close)['price'],358)
 
+    def test_winter_morning_kst_includes_close(self):
+        p=payload(7)
+        now=dt.datetime(2025,1,7,22,15,tzinfo=dt.timezone.utc)
+        self.assertEqual(refresh.parse_chart(p,'TEST','Test',now=now)['price'],106)
+
     def test_insufficient_history_is_not_high(self):
         record=refresh.parse_chart(payload(20),'IPO','New',now=dt.datetime(2027,1,1,tzinfo=dt.timezone.utc))
         self.assertFalse(record['newHigh'])

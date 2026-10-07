@@ -37,7 +37,7 @@ def parse_chart(payload, symbol, name, kind="usd", now=None):
     timezone = ZoneInfo(result["meta"].get("exchangeTimezoneName", "America/New_York"))
     local_now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(timezone)
     today = local_now.date()
-    completed_today = symbol not in {"CL=F", "GC=F", "BTC-USD"} and local_now.hour >= 18
+    completed_today = symbol not in {"CL=F", "GC=F", "BTC-USD"} and local_now.hour >= 17
     indicators = result["indicators"]
     quote = indicators["quote"][0]
     closes, volumes = quote.get("close", []), quote.get("volume", [])
@@ -47,7 +47,7 @@ def parse_chart(payload, symbol, name, kind="usd", now=None):
         date = dt.datetime.fromtimestamp(timestamp, timezone).date()
         close = number(closes[i]) if i < len(closes) else None
         adj = number(adjusted[i]) if i < len(adjusted) else None
-        # US equity/index close is final after 18:00 local, with a publication buffer.
+        # US equity/index close is final after 17:00 local, with a publication buffer.
         # Futures and crypto continue to exclude the current exchange calendar day.
         if date > today or (date == today and not completed_today) or close is None or close <= 0:
             continue
@@ -68,7 +68,7 @@ def parse_chart(payload, symbol, name, kind="usd", now=None):
 
 def get_chart(symbol, name, kind="usd"):
     local_now = dt.datetime.now(ZoneInfo("America/New_York"))
-    session_key = f"{local_now.date()}:{local_now.hour >= 18}:v2"
+    session_key = f"{local_now.date()}:{local_now.hour >= 17}:v2"
     cache = ROOT / "data" / "cache" / (hashlib.sha256(symbol.encode()).hexdigest() + ".json")
     if cache.exists() and time.time() - cache.stat().st_mtime < 6 * 3600:
         cached = json.loads(cache.read_text(encoding="utf-8"))
