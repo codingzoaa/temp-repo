@@ -25,7 +25,7 @@ python3 -m http.server 8000 --bind 0.0.0.0
 
 `.github/workflows/daily-brief.yml`은 GitHub Pages에 정적 파일과 수집 JSON을 배포하는 워크플로입니다. 한국 시간 화~토 19:15 실행과 수동 실행을 지원합니다. GitHub 스케줄 실행은 지연될 수 있습니다. 수집 요청 실패 시 배포가 중단되어 기존 공개 사이트를 유지합니다.
 
-워크플로는 아직 GitHub에 업로드하거나 실행하지 않았고, 공개 사이트 주소도 생성되지 않았습니다. 환경 설정 초안에는 원천 데이터 호스트 허용 목록과 start_skill 실행 지침을 저장했습니다. 환경 초안 저장은 사이트 게시와 별개이며 클라우드 환경에 대한 게시도 수행하지 않았습니다. GitHub Pages 지원 플랜/저장소 공개 여부를 확인한 뒤, 저장소 Settings → Pages → Source를 GitHub Actions로 설정하고 변경 파일을 반영한 후 Actions에서 실행합니다. Sites 도구는 이 세션에 없으므로 Sites 게시도 수행하지 않았습니다.
+워크플로와 사이트 파일은 GitHub의 `codingzoaa/temp-repo` 저장소 `main`에 반영했습니다. `main` push에서는 저장소에 포함된 실제 데이터 스냅샷을 게시하고, 예약/수동 실행에서 새 데이터를 수집합니다. GitHub Pages 활성화가 필요한 경우 저장소 Settings → Pages → Source를 GitHub Actions로 설정합니다. 환경 설정 초안에는 원천 데이터 및 배포 확인 호스트 허용 목록과 start_skill 실행 지침을 저장했습니다. 환경 초안 저장은 사이트 게시와 별개이며 클라우드 환경에 대한 게시도 수행하지 않았습니다. Sites 도구는 이 세션에 없으므로 Sites 게시도 수행하지 않았습니다.
 
 ## 검증
 
