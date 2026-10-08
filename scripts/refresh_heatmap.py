@@ -21,6 +21,18 @@ def parse_members(text):
         raise ValueError('Duplicate constituent symbols')
     return rows
 
+def period_returns(history):
+    result={}
+    for label,days in [('1D',1),('1W',5),('1M',21)]:
+        value=None;start=None
+        if len(history)>days:
+            last=history[-1].get('adjusted',history[-1].get('close'))
+            previous=history[-days-1].get('adjusted',history[-days-1].get('close'))
+            if isinstance(last,(int,float)) and isinstance(previous,(int,float)) and last>0 and previous>0:
+                value=(last/previous-1)*100;start=history[-days-1]['date']
+        result[label]={'return':value,'startDate':start,'endDate':history[-1]['date'] if history else None}
+    return result
+
 def main():
     path=ROOT/'data'/'market.json'
     snapshot=json.loads(path.read_text())
@@ -35,7 +47,7 @@ def main():
         q=get_chart(entry['symbol'],member['Security'])
         return {'symbol':member['Symbol'],'name':member['Security'],'sector':member['GICS Sector'],
                 'industry':member.get('GICS Sub-Industry',''),'marketCap':entry['marketCap'],
-                'price':q['price'],'change':q['change'],'date':q['date']}
+                'price':q['price'],'change':q['change'],'date':q['date'],'periods':period_returns(q['history'])}
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
         futures={pool.submit(collect,m):m for m in members}
         for future in concurrent.futures.as_completed(futures):

@@ -47,7 +47,7 @@
 
     <section id="rotation" class="panel"><div class="panel-heading"><div><h2>Sector Rotation</h2><p>미국 대표 섹터 ETF · SPY 대비 상대 흐름</p></div><div class="sector-sort" aria-label="섹터 정렬 기간"><button class="selected" data-sector-period="1D">1D</button><button data-sector-period="1W">1W</button><button data-sector-period="1M">1M</button></div></div><div id="sector-table"></div><details class="method"><summary>상태값과 상대 흐름을 읽는 법</summary><p>수익률 아래 값은 SPY 대비 초과 수익률(%p)입니다. 기간은 1 / 5 / 21거래일입니다. 🔥 신규 강세: 당일 상대 수익률이 양수이고 전일 음수·보합에서 전환하거나 최근 3일 평균이 직전 3일보다 0.25%p 이상 가속. ↑ 강세 지속: 2거래일 이상 연속 SPY 상회. ↓ 약화: 당일 SPY를 하회하고 전일 대비 상대 수익률 하락. → 유지: 그 외. 상태는 선택한 정렬 기간과 무관하게 최신 일별 흐름으로 판정합니다. SOXX는 XLK와 일부 종목이 겹치는 반도체 테마입니다.</p></details></section>
 
-    <section id="heatmap-panel" class="panel"><div class="panel-heading"><div><h2>섹터별 히트맵 <span class="subtle">MARKET MAP</span></h2><p>S&P 500 구성 종목 · 시가총액과 일간 등락</p></div><span class="subtle">초록: 상승 · 빨강: 하락</span></div><div id="heatmap-meta" class="panel-note"></div><div id="heatmap-map"></div><div id="heatmap-detail" class="heatmap-detail" aria-live="polite">종목을 선택하면 가격·시가총액·관측일을 확인할 수 있습니다.</div><div class="heatmap-legend"><span style="background:#a32c41">−3% 이하</span><span style="background:#71303e">−1%</span><span style="background:#363e4a">0%</span><span style="background:#28614c">+1%</span><span style="background:#168653">+3% 이상</span></div></section>
+    <section id="heatmap-panel" class="panel"><div class="panel-heading"><div><h2>섹터별 히트맵 <span class="subtle">MARKET MAP</span></h2><p>S&P 500 구성 종목 · 면적: 시총 · 초록: 상승 / 빨강: 하락</p></div><div class="heatmap-periods" aria-label="히트맵 수익률 기간"><button type="button" class="selected" data-heatmap-period="1D">1D</button><button type="button" data-heatmap-period="1W">1W</button><button type="button" data-heatmap-period="1M">1M</button></div></div><div id="heatmap-meta" class="panel-note"></div><div id="heatmap-map"></div><div id="heatmap-detail" class="heatmap-detail" aria-live="polite">종목을 선택하면 가격·시가총액·관측일을 확인할 수 있습니다.</div><div class="heatmap-legend"><span style="background:#a32c41">−3% 이하</span><span style="background:#71303e">−1%</span><span style="background:#363e4a">0%</span><span style="background:#28614c">+1%</span><span style="background:#168653">+3% 이상</span></div></section>
 
     <section id="breadth" class="panel">
       <div class="panel-heading"><div><h2>Market Breadth</h2><p>시총 $10B 이상 수집 종목 기준 · 시장 내부 체력</p></div><div class="breadth-periods" aria-label="시장 폭 추이 기간"><button type="button" data-breadth-period="1M">1개월</button><button type="button" class="selected" data-breadth-period="3M">3개월</button></div></div>
@@ -81,6 +81,6 @@
     <p id="data-status" class="panel-note" role="status">시세 파일 확인 중…</p>
     <footer><span><b>Market Brief.</b> 매일의 시장을 읽는 습관</span><span>U.S. Treasury / Yahoo Finance / Nasdaq · 일별 지연 데이터</span></footer>
   </main>
-  <script src="app.js?v=breadth-ratio-2"></script><script src="dashboard.js"></script><script src="intraday.js"></script><script src="heatmap.js"></script>
+  <script src="app.js?v=breadth-ratio-2"></script><script src="dashboard.js"></script><script src="intraday.js"></script><script src="heatmap.js?v=periods-1"></script>
 </body>
 </html>
