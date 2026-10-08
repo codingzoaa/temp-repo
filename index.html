@@ -81,6 +81,7 @@
     <p id="data-status" class="panel-note" role="status">시세 파일 확인 중…</p>
     <footer><span><b>Market Brief.</b> 매일의 시장을 읽는 습관</span><span>U.S. Treasury / Yahoo Finance / Nasdaq · 일별 지연 데이터</span></footer>
   </main>
-  <script src="app.js?v=breadth-ratio-2"></script><script src="dashboard.js"></script><script src="intraday.js"></script><script src="heatmap.js?v=periods-1"></script>
+  <dialog id="quote-chart-dialog" aria-labelledby="quote-chart-title"><div class="quote-chart-heading"><div><h2 id="quote-chart-title"></h2><p id="quote-chart-source"></p></div><button type="button" id="close-quote-chart" aria-label="차트 닫기">×</button></div><div class="quote-chart-periods" aria-label="상세 차트 기간"><button type="button" data-chart-period="1M">1개월</button><button type="button" class="selected" data-chart-period="3M">3개월</button><button type="button" data-chart-period="1Y">1년</button></div><div id="quote-chart-content"></div><p class="chart-footnote">일별 관측 데이터 · 선택 기간보다 이력이 짧으면 실제 보유 구간만 표시합니다.</p></dialog>
+  <script src="app.js?v=chart-detail-1"></script><script src="charts.js"></script><script src="dashboard.js?v=chart-detail-1"></script><script src="intraday.js"></script><script src="heatmap.js?v=periods-1"></script>
 </body>
 </html>

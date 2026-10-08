@@ -42,7 +42,7 @@ jobs:
       - name: Assemble static site
         run: |
           mkdir -p public/data
-          cp index.html style.css app.js dashboard.js intraday.js heatmap.js public/
+          cp index.html style.css app.js dashboard.js intraday.js heatmap.js charts.js public/
           cp data/market.json public/data/
           cp data/briefing.json public/data/
           cp data/news.json public/data/

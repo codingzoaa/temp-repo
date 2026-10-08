@@ -42,8 +42,22 @@ def rotation(record, benchmark):
     return {**record,'periods':{'1D':performance(1),'1W':performance(5),'1M':performance(21)},
             'state':state,'detail':detail,'streak':streak,'acceleration':acceleration}
 
+def sentiment_history(raw):
+    points={}
+    for point in (raw.get('fear_and_greed_historical') or {}).get('data',[]):
+        score=number(point.get('y'));stamp=number(point.get('x'))
+        if score is None or stamp is None or not 0<=score<=100:continue
+        try:date=dt.datetime.fromtimestamp(stamp/1000,dt.timezone.utc).date().isoformat()
+        except (ValueError,OverflowError,OSError):continue
+        points[date]={'date':date,'close':score}
+    dates=sorted(points)
+    if not dates:return []
+    cutoff=(dt.date.fromisoformat(dates[-1])-dt.timedelta(days=365)).isoformat()
+    return [points[d] for d in dates if d>=cutoff]
+
 def sentiment():
-    url='https://production.dataviz.cnn.io/index/fearandgreed/graphdata'
+    start=(dt.datetime.now(dt.timezone.utc)-dt.timedelta(days=365)).date().isoformat()
+    url='https://production.dataviz.cnn.io/index/fearandgreed/graphdata/'+start
     request=urllib.request.Request(url,headers={
         'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
         'Accept':'application/json','Origin':'https://edition.cnn.com',
@@ -57,7 +71,7 @@ def sentiment():
             'previousClose':number(source.get('previous_close')),
             'previousWeek':number(source.get('previous_1_week')),
             'previousMonth':number(source.get('previous_1_month')),
-            'source':'CNN','url':'https://edition.cnn.com/markets/fear-and-greed'}
+            'history':sentiment_history(raw),'source':'CNN','url':'https://edition.cnn.com/markets/fear-and-greed'}
 
 def main():
     path=ROOT/'data/briefing.json'

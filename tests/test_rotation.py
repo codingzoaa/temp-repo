@@ -58,3 +58,12 @@ class RotationTests(unittest.TestCase):
             with self.assertRaises(ValueError):sentiment()
 
 if __name__=='__main__':unittest.main()
+
+class SentimentHistoryTests(unittest.TestCase):
+    def test_valid_points_missing_and_out_of_range(self):
+        from refresh_briefing import sentiment_history
+        raw={'fear_and_greed_historical':{'data':[{'x':1759881600000,'y':45},{'x':1759968000000,'y':50},{'x':1759968000000,'y':51},{'x':1760054400000,'y':101},{'x':None,'y':30}]}}
+        result=sentiment_history(raw)
+        self.assertEqual(len(result),2)
+        self.assertEqual(result[-1]['close'],51)
+        self.assertEqual(sentiment_history({}),[])

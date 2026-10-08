@@ -129,7 +129,7 @@ def treasury_rates(now=None):
     if len(rows) < 2:
         raise ValueError("Treasury yield curve history unavailable")
     def series(key, name):
-        hist=[{"date":r["date"],"close":r[key]} for r in rows[-64:]]
+        hist=[{"date":r["date"],"close":r[key]} for r in rows]
         return {"symbol":key.upper(),"name":name,"kind":"yield","price":hist[-1]["close"],
                 "change":hist[-1]["close"]-hist[-2]["close"],"changePoints":hist[-1]["close"]-hist[-2]["close"],
                 "date":hist[-1]["date"],"history":hist,"source":"U.S. Treasury"}
