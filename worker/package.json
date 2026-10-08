@@ -1,0 +1,1 @@
+{"name":"market-brief-api","private":true,"type":"module","scripts":{"deploy":"wrangler deploy","test":"node --test test.mjs"},"devDependencies":{"wrangler":"^4.0.0"}}

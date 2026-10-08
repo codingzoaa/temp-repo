@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "market-brief-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-08",
+  "workers_dev": true,
+  "vars": { "ALLOWED_ORIGIN": "https://codingzoaa.github.io" },
+  "triggers": { "crons": ["*/15 * * * *"] }
+}
