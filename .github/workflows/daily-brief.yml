@@ -29,6 +29,7 @@ jobs:
           python3 -m unittest discover -s tests -v
           node tests/test_ui.cjs
           node tests/test_dashboard.cjs
+          node tests/test_heatmap.cjs
           node --test worker/test.mjs
       - name: Fetch free daily data
         run: python3 scripts/refresh_data.py
@@ -39,7 +40,7 @@ jobs:
       - name: Assemble static site
         run: |
           mkdir -p public/data
-          cp index.html style.css app.js dashboard.js intraday.js public/
+          cp index.html style.css app.js dashboard.js intraday.js heatmap.js public/
           cp data/market.json public/data/
           cp data/briefing.json public/data/
           cp data/news.json public/data/
