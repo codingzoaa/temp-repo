@@ -64,12 +64,21 @@ function renderFear(){
  const observation=new Date(timestamp);const stale=briefing.fearGreedCached||Date.now()-observation.getTime()>36*3600000;
  el.innerHTML=title+`<div class="sentiment-score"><strong>${Math.round(fg.score)}</strong><div><b>${esc(label)}</b><span>100점 기준 · ${stale?'최근 저장값':'CNN 관측값'}</span></div></div><div class="sentiment-gauge"><span style="left:${fg.score}%"></span></div><div class="gauge-labels"><span>극단적 공포</span><span>중립</span><span>극단적 탐욕</span></div><div class="sentiment-history">${[['전일',fg.previousClose],['1주 전',fg.previousWeek],['1개월 전',fg.previousMonth]].map(([l,n])=>`<span>${l} <b>${finite(n)?Math.round(n):'—'}</b></span>`).join('')}</div><p class="sentiment-date">관측 ${Number.isFinite(observation.getTime())?esc(observation.toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})):'시각 미제공'} KST${stale?' · 최신 값 확인 필요':''}</p>${typeof fearHistoryMarkup==='function'?fearHistoryMarkup(fg):''}`;
 }
+function renderPutCall(){
+ const el=document.querySelector('#put-call');if(!el)return;
+ const item=briefing.fearGreed?.putCall;
+ const heading='<div class="eyebrow">PUT AND CALL OPTIONS</div><h2>5-day average put/call ratio</h2><p class="put-call-subtitle">풋/콜 거래량 비율 · 5일 평균</p>';
+ if(!item||!finite(item.ratio)){el.innerHTML=heading+'<p class="chart-unavailable">CNN 비율 데이터를 아직 가져오지 못했습니다.</p>';return;}
+ const timestamp=new Date(item.timestamp),stale=item.cached||briefing.fearGreedCached||Date.now()-timestamp.getTime()>72*3600000;
+ const labels={'extreme fear':'극단적 공포',fear:'공포',neutral:'중립',greed:'탐욕','extreme greed':'극단적 탐욕'};
+ el.innerHTML=heading+`<div class="put-call-value"><strong>${item.ratio.toFixed(3)}</strong>${labels[item.rating]?`<span>${labels[item.rating]} · CNN</span>`:''}</div><p class="put-call-date">관측 ${esc(sourceTime(item.timestamp))} KST${stale?' · 최근 저장값':''}</p>${typeof detailedChart==='function'?detailedChart(item.history,{name:'5-day average put/call ratio',width:300,decimals:3}):''}<p class="put-call-explain">비율 상승은 콜 대비 풋 거래가 늘었음을 뜻합니다. 일반적으로 방어 수요 증가의 신호이며, 1을 넘으면 풋 거래가 더 많습니다.</p><a class="put-call-source" href="https://edition.cnn.com/markets/fear-and-greed" target="_blank" rel="noopener noreferrer">CNN 원문 ↗</a>`;
+}
 function renderSectors(){
  const sectors=[...(briefing.sectors||[])].sort((a,b)=>b.periods[sectorPeriod].relative-a.periods[sectorPeriod].relative);
  if(!sectors.length){document.querySelector('#sector-table').innerHTML='<p class="panel-note">섹터 데이터 수집 대기 중입니다.</p>';return;}
  document.querySelector('#sector-table').innerHTML=`<div class="rotation-note">정렬: ${sectorPeriod} SPY 대비 초과 수익률 · 관측 ${esc(sectors[0].date)} <span>큰 숫자: ETF 수익률 / 아래: SPY 대비 %p</span></div><div class="table-scroll"><table class="rotation-table"><thead><tr><th>섹터 / ETF</th><th>최신 상태</th>${['1D','1W','1M'].map(p=>`<th class="${p===sectorPeriod?'sort-column':''}">${p}</th>`).join('')}</tr></thead><tbody>${sectors.map(s=>`<tr><td><div class="sector-name"><strong>${esc(s.korean)}</strong><span>${esc(s.name)} · ${esc(s.symbol)}</span></div></td><td><div class="state-badge ${esc(s.state)}">${stateLabels[s.state]||'→ 유지'}</div><small class="state-detail">${esc(s.detail)}</small></td>${['1D','1W','1M'].map(p=>{const n=s.periods[p];return `<td class="${p===sectorPeriod?'sort-column':''}"><strong class="${cls(n.return)}">${signed(n.return)}%</strong><small class="relative ${cls(n.relative)}">${signed(n.relative)}%p</small></td>`;}).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
-function renderDashboard(){renderSummary();renderFear();renderSectors();if(typeof renderHeatmap==='function')renderHeatmap();}
+function renderDashboard(){renderSummary();renderFear();renderPutCall();renderSectors();if(typeof renderHeatmap==='function')renderHeatmap();}
 document.querySelectorAll('[data-sector-period]').forEach(button=>{button.setAttribute('aria-pressed',String(button.dataset.sectorPeriod===sectorPeriod));button.addEventListener('click',()=>{sectorPeriod=button.dataset.sectorPeriod;document.querySelectorAll('[data-sector-period]').forEach(b=>{b.classList.toggle('selected',b===button);b.setAttribute('aria-pressed',String(b===button));});renderSectors();});});
 async function loadBriefing(){
  try{const response=await fetch('data/briefing.json',{cache:'no-store'});if(!response.ok)throw new Error('No briefing data');const snapshot=await response.json();if(!Array.isArray(snapshot.sectors))throw new Error('Invalid briefing');briefing=snapshot;}catch(error){briefing={sectors:[],fearGreed:null};}

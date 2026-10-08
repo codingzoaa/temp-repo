@@ -67,3 +67,15 @@ class SentimentHistoryTests(unittest.TestCase):
         self.assertEqual(len(result),2)
         self.assertEqual(result[-1]['close'],51)
         self.assertEqual(sentiment_history({}),[])
+
+class PutCallTests(unittest.TestCase):
+    def test_ratio_uses_raw_history_not_sentiment_score(self):
+        from refresh_briefing import put_call_history
+        result=put_call_history({'put_call_options':{'score':30.4,'rating':'fear','data':[{'x':1759881600000,'y':0.76},{'x':1759968000000,'y':0.81}]}})
+        self.assertEqual(result['ratio'],0.81)
+        self.assertEqual(result['history'][0]['close'],0.76)
+        self.assertEqual(result['rating'],'fear')
+    def test_missing_and_invalid_ratio(self):
+        from refresh_briefing import put_call_history
+        self.assertIsNone(put_call_history({}))
+        self.assertIsNone(put_call_history({'put_call_options':{'data':[{'x':1759881600000,'y':-1},{'x':None,'y':0.8}]}}))

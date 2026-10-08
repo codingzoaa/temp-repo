@@ -55,6 +55,21 @@ def sentiment_history(raw):
     cutoff=(dt.date.fromisoformat(dates[-1])-dt.timedelta(days=365)).isoformat()
     return [points[d] for d in dates if d>=cutoff]
 
+def put_call_history(raw):
+    source=raw.get('put_call_options') or {}
+    points={};latest=None
+    for point in source.get('data',[]):
+        ratio=number(point.get('y'));stamp=number(point.get('x'))
+        if ratio is None or ratio<0 or stamp is None:continue
+        try:date=dt.datetime.fromtimestamp(stamp/1000,dt.timezone.utc).date().isoformat()
+        except (ValueError,OverflowError,OSError):continue
+        points[date]={'date':date,'close':ratio}
+        if latest is None or stamp>latest['timestamp']:latest={'ratio':ratio,'timestamp':stamp}
+    if not latest:return None
+    cutoff=(dt.date.fromisoformat(max(points))-dt.timedelta(days=365)).isoformat()
+    return {**latest,'rating':source.get('rating'),'history':[points[d] for d in sorted(points) if d>=cutoff],
+            'source':'CNN','name':'5-day average put/call ratio'}
+
 def sentiment():
     start=(dt.datetime.now(dt.timezone.utc)-dt.timedelta(days=365)).date().isoformat()
     url='https://production.dataviz.cnn.io/index/fearandgreed/graphdata/'+start
@@ -71,7 +86,7 @@ def sentiment():
             'previousClose':number(source.get('previous_close')),
             'previousWeek':number(source.get('previous_1_week')),
             'previousMonth':number(source.get('previous_1_month')),
-            'history':sentiment_history(raw),'source':'CNN','url':'https://edition.cnn.com/markets/fear-and-greed'}
+            'putCall':put_call_history(raw),'history':sentiment_history(raw),'source':'CNN','url':'https://edition.cnn.com/markets/fear-and-greed'}
 
 def main():
     path=ROOT/'data/briefing.json'
@@ -96,6 +111,10 @@ def main():
         out['warnings'].append(f'CNN Fear & Greed: {error}')
         out['fearGreed']=previous.get('fearGreed')
         out['fearGreedCached']=bool(out['fearGreed'])
+    if out['fearGreed'] and not out['fearGreed'].get('putCall'):
+        saved=(previous.get('fearGreed') or {}).get('putCall')
+        if saved:out['fearGreed']['putCall']={**saved,'cached':True}
+        out['warnings'].append('CNN Put/Call ratio unavailable; retained previous observation if present')
     if failed:
         print('\n'.join(out['warnings']),file=sys.stderr)
         return 1  # Preserve a complete sector snapshot on request failure.

@@ -32,7 +32,7 @@
     <div class="notice"><span>ⓘ</span> 무료 시장 데이터 연결 대기 중입니다. 수집 전에는 시세를 표시하지 않습니다.</div>
 
     <section id="intraday" class="panel" aria-live="polite"></section>
-    <section class="daily-grid"><article id="market-summary" class="panel"></article><article id="fear-greed" class="panel"></article></section>
+    <section class="daily-grid"><article id="market-summary" class="panel"></article><div class="sentiment-stack"><article id="fear-greed" class="panel"></article><article id="put-call" class="panel"></article></div></section>
 
     <section>
       <div class="section-heading"><h2>미국 주요 지수 <span>MARKET OVERVIEW</span></h2><div class="periods" aria-label="차트 기간"><button data-period="1W">1주</button><button class="selected" data-period="1M">1개월</button><button data-period="3M">3개월</button></div></div>
@@ -82,6 +82,6 @@
     <footer><span><b>Market Brief.</b> 매일의 시장을 읽는 습관</span><span>U.S. Treasury / Yahoo Finance / Nasdaq · 일별 지연 데이터</span></footer>
   </main>
   <dialog id="quote-chart-dialog" aria-labelledby="quote-chart-title"><div class="quote-chart-heading"><div><h2 id="quote-chart-title"></h2><p id="quote-chart-source"></p></div><button type="button" id="close-quote-chart" aria-label="차트 닫기">×</button></div><div class="quote-chart-periods" aria-label="상세 차트 기간"><button type="button" data-chart-period="1M">1개월</button><button type="button" class="selected" data-chart-period="3M">3개월</button><button type="button" data-chart-period="1Y">1년</button></div><div id="quote-chart-content"></div><p class="chart-footnote">일별 관측 데이터 · 선택 기간보다 이력이 짧으면 실제 보유 구간만 표시합니다.</p></dialog>
-  <script src="app.js?v=chart-detail-1"></script><script src="charts.js"></script><script src="dashboard.js?v=chart-detail-1"></script><script src="intraday.js"></script><script src="heatmap.js?v=periods-1"></script>
+  <script src="app.js?v=chart-detail-1"></script><script src="charts.js?v=put-call-1"></script><script src="dashboard.js?v=put-call-1"></script><script src="intraday.js"></script><script src="heatmap.js?v=periods-1"></script>
 </body>
 </html>
