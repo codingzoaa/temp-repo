@@ -11,17 +11,23 @@ const snapshot={schemaVersion:2,generatedAt:new Date().toISOString(),indices:[st
  breadth:{scope:'test',count:3,advancers:2,decliners:1,unchanged:0,above20:70,above50:60,above200:80,newHighs:2,newLows:0},
  regime:{label:'RISK ON',tone:'positive',score:4,maxScore:5,summary:'test regime',signals:[{name:'SOX',positive:true,value:1}]},
  stocks:[stock],leaders:[stock],highs:[stock],warnings:[],universe:{fetched:1,eligible:1,complete:true}};
+snapshot.breadth.history=Array.from({length:63},(_,i)=>({date:new Date(Date.UTC(2026,6,i+1)).toISOString().slice(0,10),advanceRatio:50,above20:70,above50:60,above200:80,newHighs:2,newLows:0,measured:4,eligible20:4,eligible50:4,eligible200:4,highEligible:4}));
+const markup=fs.readFileSync('index.html','utf8');
+assert.match(markup,/<button[^>]*data-breadth-period="3M"[^>]*>3개월<\/button>/);
 async function run(response){
  const elements=new Map();function el(k){if(!elements.has(k))elements.set(k,{innerHTML:'',textContent:'',value:'',hidden:false,events:{},addEventListener(k,f){this.events[k]=f;}});return elements.get(k);}
  const buttons=['1W','1M','3M'].map(p=>({dataset:{period:p},events:{},classList:{toggle(){}},setAttribute(){},addEventListener(k,f){this.events[k]=f;}}));
- const context={document:{querySelector:el,querySelectorAll:s=>s==='[data-period]'?buttons:[]},fetch:async()=>response,Date,console};
+ const breadthButtons=['1M','3M'].map(p=>({dataset:{breadthPeriod:p},events:{},classList:{toggle(){}},setAttribute(){},addEventListener(k,f){this.events[k]=f;}}));
+ const context={document:{querySelector:el,querySelectorAll:s=>s==='[data-period]'?buttons:s==='[data-breadth-period]'?breadthButtons:[]},fetch:async()=>response,Date,console};
  vm.runInNewContext(fs.readFileSync('app.js','utf8'),context);
- await new Promise(resolve=>setImmediate(resolve));return {el,buttons};
+ await new Promise(resolve=>setImmediate(resolve));return {el,buttons,breadthButtons};
 }
 (async()=>{
- let {el,buttons}=await run({ok:true,json:async()=>snapshot});
+ let {el,buttons,breadthButtons}=await run({ok:true,json:async()=>snapshot});
  assert.match(el('#volume-body').innerHTML,/TEST/);assert.match(el('#volume-body').innerHTML,/&lt;img/);assert.ok(!el('#volume-body').innerHTML.includes('<img'));
  assert.equal(el('.mode').textContent,'DAILY DATA');assert.match(el('#high-body').innerHTML,/20.00B/);assert.match(el('#regime-card').innerHTML,/RISK ON/);assert.match(el('#sector-grid').innerHTML,/Technology/);assert.match(el('#breadth-grid').innerHTML,/70.0%/);
+ assert.match(el('#breadth-grid').innerHTML,/상승 종목 비율/);
+ for(const [i,count] of [[0,21],[1,63],[0,21],[1,63]]){breadthButtons[i].events.click();assert.match(el('#breadth-grid').innerHTML,new RegExp('data-observations="'+count+'"'));assert.match(el('#breadth-period-status').textContent,new RegExp(count+'거래일'));}
  const before=el('#indices').innerHTML;buttons[2].events.click();assert.notEqual(el('#indices').innerHTML,before);
  el('#search').value='missing';el('#search').events.input();assert.equal(el('#empty').hidden,false);assert.equal(el('#volume-body').innerHTML,'');
  el('#search').value='test';el('#search').events.input();assert.equal(el('#empty').hidden,true);
