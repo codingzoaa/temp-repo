@@ -13,6 +13,7 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 from zoneinfo import ZoneInfo
+from breadth_history import build_history
 
 ROOT = Path(__file__).resolve().parents[1]
 INDEX = [("^GSPC", "S&P 500"), ("^IXIC", "나스닥 종합"), ("^DJI", "다우 존스"), ("^RUT", "러셀 2000"), ("^SOX", "필라델피아 반도체")]
@@ -75,7 +76,7 @@ def parse_chart(payload, symbol, name, kind="usd", now=None):
     return {"symbol": symbol, "name": name, "kind": kind, "price": last["close"],
             "change": (last["close"] / previous["close"] - 1) * 100,
             "changePoints": last["close"] - previous["close"], "date": last["date"],
-            "history": history[-253:],
+            "history": history[-505:],
             "monthReturn": (last["adjusted"] / history[-22]["adjusted"] - 1) * 100 if len(history) >= 22 else None,
             "weekReturn": (last["adjusted"] / history[-6]["adjusted"] - 1) * 100 if len(history) >= 6 else None,
             "newHigh": len(history) >= 253 and last["adjusted"] >= max(p["adjusted"] for p in history[-253:-1]),
@@ -85,7 +86,7 @@ def parse_chart(payload, symbol, name, kind="usd", now=None):
 
 def get_chart(symbol, name, kind="usd"):
     local_now = dt.datetime.now(ZoneInfo("America/New_York"))
-    session_key = f"{local_now.date()}:{local_now.hour >= 17}:v3"
+    session_key = f"{local_now.date()}:{local_now.hour >= 17}:v4"
     cache = ROOT / "data" / "cache" / (hashlib.sha256(symbol.encode()).hexdigest() + ".json")
     if cache.exists() and time.time() - cache.stat().st_mtime < 6 * 3600:
         cached = json.loads(cache.read_text(encoding="utf-8"))
@@ -252,6 +253,7 @@ def main():
         out["leaders"] = sorted([s for s in candidates if s["monthReturn"] is not None], key=lambda s:s["monthReturn"], reverse=True)[:10]
         out["highs"] = sorted([s for s in candidates if s["newHigh"]], key=lambda s:s["marketCap"], reverse=True)
         out["breadth"] = build_breadth(candidates)
+        out["breadth"]["history"] = build_history(candidates)
         incomplete = sum(not s["highHistoryComplete"] for s in candidates)
         if incomplete:
             out["warnings"].append(f"52주 신고가: {incomplete}종목 이력 부족")

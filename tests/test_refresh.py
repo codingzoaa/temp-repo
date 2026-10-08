@@ -29,7 +29,7 @@ class CollectorTests(unittest.TestCase):
         record=refresh.parse_chart(p,'TEST','Test',now=last)
         self.assertEqual(record['price'],358)  # Current day (359) excluded.
         self.assertTrue(record['newHigh'])
-        self.assertEqual(len(record['history']),253)
+        self.assertEqual(len(record['history']),259)  # Keep additional history for historical breadth.
         self.assertAlmostEqual(record['monthReturn'],(358/337-1)*100)
         self.assertAlmostEqual(record['change'],(358/357-1)*100)
 

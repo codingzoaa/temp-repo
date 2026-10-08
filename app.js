@@ -1,6 +1,6 @@
 // Render collected observations only; never fall back to invented prices.
 let data={indices:[],assets:[],rates:{},sectors:[],breadth:{},regime:{},stocks:[],leaders:[],highs:[]};
-let period='1M';
+let period='1M';let breadthPeriod='3M';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const finite=n=>typeof n==='number'&&Number.isFinite(n);
 const signed=n=>finite(n)?`${n>=0?'+':''}${n.toFixed(2)}`:'—';
@@ -35,22 +35,31 @@ function renderLegacySectors(){
  const rows=[...(data.sectors||[])].sort((a,b)=>(b.monthReturn??-Infinity)-(a.monthReturn??-Infinity));
  document.querySelector('#sector-grid').innerHTML=rows.map((s,i)=>`<article class="sector-card"><div class="sector-rank">${String(i+1).padStart(2,'0')}</div><div><strong>${esc(s.name)}</strong><span>${esc(s.symbol)}</span></div><dl><dt>1D</dt><dd class="${cls(s.change)}">${signed(s.change)}%</dd><dt>1W</dt><dd class="${cls(s.weekReturn)}">${signed(s.weekReturn)}%</dd><dt>1M</dt><dd class="${cls(s.monthReturn)}">${signed(s.monthReturn)}%</dd></dl></article>`).join('')||'<div class="panel-note">섹터 데이터 미수집</div>';
 }
-function breadthMetric(label,value,sub=''){
- return `<article class="breadth-metric"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(sub)}</small></article>`;
+function breadthChart(points,keys,percent=false){
+ const values=points.flatMap(p=>keys.map(k=>p[k])).filter(finite);
+ if(points.length<2||values.length<2)return '<div class="breadth-trend-empty">계산 가능한 과거 이력이 부족합니다.</div>';
+ const max=percent?100:Math.max(1,...values),colors=['#6574df','#9c627b'];
+ const labels={advancers:'상승',decliners:'하락',above20:'20DMA 상회',above50:'50DMA 상회',above200:'200DMA 상회',newHighs:'52주 신고가',newLows:'52주 신저가'};
+ let lines='';keys.forEach((key,j)=>{let segment=[];const flush=()=>{if(segment.length>1)lines+=`<polyline points="${segment.join(' ')}" fill="none" stroke="${colors[j]}" stroke-width="2" vector-effect="non-scaling-stroke"/>`;segment=[];};points.forEach((p,i)=>{if(!finite(p[key])){flush();return;}const x=26+i/(points.length-1)*170,y=86-p[key]/max*70;segment.push(`${x},${y}`);lines+=`<circle cx="${x}" cy="${y}" r="2" fill="${colors[j]}"><title>${esc(p.date)} · ${labels[key]} ${percent?p[key].toFixed(1)+'%':p[key]+'종목'} · 계산 표본 ${key.startsWith('above')?p['eligible'+key.slice(5)]:key.startsWith('new')?p.highEligible:p.measured}종목</title></circle>`;});flush();});
+ return `<div class="breadth-trend"><div class="breadth-chart-key">${keys.map((k,i)=>`<span style="color:${colors[i]}">${labels[k]}</span>`).join('')}</div><svg viewBox="0 0 205 105" role="img" aria-label="${esc(keys.map(k=>labels[k]).join('·'))} ${esc(points[0].date)}부터 ${esc(points.at(-1).date)} 추이"><path d="M26 16H196 M26 51H196 M26 86H196" stroke="#e9edf5" stroke-width="1"/><text x="1" y="20">${percent?'100%':Math.ceil(max)}</text><text x="8" y="89">0</text>${lines}</svg><div class="breadth-chart-dates"><span>${esc(points[0].date.slice(5))}</span><span>${esc(points.at(-1).date.slice(5))}</span></div></div>`;
+}
+function breadthMetric(label,value,sub='',graph=''){
+ return `<article class="breadth-metric"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(sub)}</small>${graph}</article>`;
 }
 function renderBreadth(){
  const b=data.breadth||{},total=(b.advancers||0)+(b.decliners||0)+(b.unchanged||0);
  if(!b.count){document.querySelector('#breadth-grid').innerHTML='<div class="panel-note">Breadth 데이터 미수집</div>';document.querySelector('#breadth-note').textContent='Breadth 데이터 미수집';return;}
  const ratio=total?100*(b.advancers||0)/total:null;
+ const trend=(keys,percent=false)=>breadthChart((b.history||[]).slice(breadthPeriod==='1M'?-21:-63),keys,percent);
  document.querySelector('#breadth-grid').innerHTML=[
-  breadthMetric('상승 / 하락',`${b.advancers} / ${b.decliners}`,finite(ratio)?`상승 비율 ${ratio.toFixed(1)}%`:''),
-  breadthMetric('20DMA 상회',pct(b.above20),'단기 추세'),
-  breadthMetric('50DMA 상회',pct(b.above50),'중기 추세'),
-  breadthMetric('200DMA 상회',pct(b.above200),'장기 추세'),
-  breadthMetric('52주 신고가',String(b.newHighs??'—'),'종가 기준'),
-  breadthMetric('52주 신저가',String(b.newLows??'—'),'종가 기준')
+  breadthMetric('상승 / 하락',`${b.advancers} / ${b.decliners}`,finite(ratio)?`상승 비율 ${ratio.toFixed(1)}%`:'',trend(['advancers','decliners'])),
+  breadthMetric('20DMA 상회',pct(b.above20),'단기 추세',trend(['above20'],true)),
+  breadthMetric('50DMA 상회',pct(b.above50),'중기 추세',trend(['above50'],true)),
+  breadthMetric('200DMA 상회',pct(b.above200),'장기 추세',trend(['above200'],true)),
+  breadthMetric('52주 신고가',String(b.newHighs??'—'),'종가 기준',trend(['newHighs'])),
+  breadthMetric('52주 신저가',String(b.newLows??'—'),'종가 기준',trend(['newLows']))
  ].join('');
- document.querySelector('#breadth-note').textContent=`${b.scope||'수집 유니버스'} · 분석 ${b.count}종목. 개별 종목 수정 종가 기준으로 계산한 표본형 Breadth입니다.`;
+ document.querySelector('#breadth-note').textContent=`${b.scope||'수집 유니버스'} · 분석 ${b.count}종목. 현재 시총 $10B 이상 수집 종목의 과거 가격으로 재계산한 표본형 추이입니다. 과거 구성·시총 기준의 시장 전체 통계가 아닙니다. 계산 가능한 종목 수는 날짜와 지표별로 다릅니다.`;
 }
 function renderVolume(){
  const q=document.querySelector('#search').value.trim().toLowerCase();const rows=data.stocks.filter(s=>`${s.symbol} ${s.name}`.toLowerCase().includes(q));
@@ -91,4 +100,5 @@ async function load(){
  }
  render();
 }
+document.querySelectorAll('[data-breadth-period]').forEach(b=>b.addEventListener('click',()=>{breadthPeriod=b.dataset.breadthPeriod;document.querySelectorAll('[data-breadth-period]').forEach(button=>{button.classList.toggle('selected',button===b);button.setAttribute('aria-pressed',String(button===b));});renderBreadth();}));
 load();
