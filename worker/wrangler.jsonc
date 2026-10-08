@@ -4,6 +4,9 @@
   "main": "src/index.js",
   "compatibility_date": "2026-10-08",
   "workers_dev": true,
+  "kv_namespaces": [
+    { "binding": "MARKET_CACHE", "id": "ff763c1c89bc48bdb25242b905a881cf" }
+  ],
   "vars": { "ALLOWED_ORIGIN": "https://codingzoaa.github.io" },
   "triggers": { "crons": ["*/15 * * * *"] }
 }
