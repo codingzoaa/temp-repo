@@ -1,6 +1,6 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert');
 const target={innerHTML:''};
-const context={document:{querySelector:()=>target,querySelectorAll:()=>[]},fetch:()=>new Promise(()=>{}),URL,Date,console,
+const context={document:{querySelector:s=>s==='.brief-card-track'?null:target,querySelectorAll:()=>[]},fetch:()=>new Promise(()=>{}),URL,Date,console,
  data:{indices:[],assets:[],rates:{}},finite:n=>typeof n==='number'&&Number.isFinite(n),signed:n=>(n>=0?'+':'')+n.toFixed(2),cls:n=>n>=0?'up':'down',esc:s=>String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;')};
 vm.createContext(context);vm.runInContext(fs.readFileSync('dashboard.js','utf8'),context);
 assert(!vm.runInContext('editorialBrief()',context).includes('undefined'));

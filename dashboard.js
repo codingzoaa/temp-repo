@@ -1,6 +1,6 @@
 let briefing={sectors:[],fearGreed:null};let sectorPeriod='1D';
 const stateLabels={new:'🔥 신규 강세',strong:'↑ 강세 지속',steady:'→ 유지',weak:'↓ 약화'};
-let newsBrief={topics:[],koreaIndices:[]};
+let newsBrief={topics:[],koreaIndices:[]};let briefCardIndex=0;
 function sourceTime(value){const date=new Date(value);return Number.isFinite(date.getTime())?date.toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}):'시각 미제공';}
 function safeNewsUrl(value){try{const u=new URL(value);return u.protocol==='https:'&&u.hostname==='news.google.com'?u.href:null;}catch{return null;}}
 function topicMarket(key){
@@ -38,7 +38,20 @@ function editorialBrief(){
  return result;
 }
 function renderSummary(){
- document.querySelector('#market-summary').innerHTML=`<div class="briefing-heading"><div><div class="eyebrow">DAILY MARKET BRIEF</div><h2>오늘의 시장 브리핑</h2></div><span class="brief-update">${newsBrief.generatedAt?'수집 '+esc(sourceTime(newsBrief.generatedAt))+' KST':'뉴스 연결 확인 중'}</span></div>${editorialBrief()}<details class="briefing-method"><summary>출처·요약 기준</summary><p>가격은 표시된 관측일의 완료 종가입니다. 뉴스는 무료 RSS에서 확인한 보도 제목을 중심으로 정리하며, 기사 본문 전체의 요약은 제공하지 않습니다. 시장 해석과 확인할 변수는 주제에 따른 일반적인 분석이며 확정된 수혜 판단이 아닙니다. 예시 이미지의 과거 수치·인용문·일정은 사용하지 않습니다. 섹터는 SPY 대비 일간 상대 수익률로 비교합니다.</p>${newsBrief.warnings?.length?`<p>수집 상태: ${esc(newsBrief.warnings.join(' / '))}</p>`:''}</details>`;
+ document.querySelector('#market-summary').innerHTML=`<div class="briefing-heading"><div><div class="eyebrow">DAILY MARKET BRIEF</div><h2>오늘의 시장 브리핑</h2></div><span class="brief-update">${newsBrief.generatedAt?'수집 '+esc(sourceTime(newsBrief.generatedAt))+' KST':'뉴스 연결 확인 중'}</span></div><div class="brief-carousel"><div class="brief-carousel-controls"><button type="button" data-brief-step="-1" aria-label="이전 카드">←</button><div class="brief-card-tabs" role="group" aria-label="브리핑 카드 선택"></div><button type="button" data-brief-step="1" aria-label="다음 카드">→</button></div><div class="brief-card-track" aria-label="옆으로 넘기는 시장 브리핑">${editorialBrief()}</div></div><details class="briefing-method"><summary>출처·요약 기준</summary><p>가격은 표시된 관측일의 완료 종가입니다. 뉴스는 무료 RSS에서 확인한 보도 제목을 중심으로 정리하며, 기사 본문 전체의 요약은 제공하지 않습니다. 시장 해석과 확인할 변수는 주제에 따른 일반적인 분석이며 확정된 수혜 판단이 아닙니다. 예시 이미지의 과거 수치·인용문·일정은 사용하지 않습니다. 섹터는 SPY 대비 일간 상대 수익률로 비교합니다.</p>${newsBrief.warnings?.length?`<p>수집 상태: ${esc(newsBrief.warnings.join(' / '))}</p>`:''}</details>`;
+ setupBriefCards();
+}
+function setupBriefCards(){
+ const track=document.querySelector('.brief-card-track');if(!track)return;
+ const cards=[...track.querySelectorAll('.editorial-section')],tabs=document.querySelector('.brief-card-tabs');
+ const names={"TODAY'S SUMMARY":'요약',"TODAY'S ISSUE":'주요 이슈','SECTOR FOCUS':'섹터','RATES WATCH':'금리','MARKET & AI BRIEF':'시장·AI','COMPANY NEWS':'기업','DATA & SCHEDULE':'일정'};
+ tabs.innerHTML=cards.map((card,i)=>`<button type="button" data-brief-card="${i}" aria-label="${esc(card.querySelector('.editorial-label').textContent)}">${names[card.querySelector('.editorial-label').textContent]||i+1}</button>`).join('');
+ function update(){tabs.querySelectorAll('button').forEach((b,i)=>{b.classList.toggle('selected',i===briefCardIndex);b.setAttribute('aria-pressed',String(i===briefCardIndex));});document.querySelector('[data-brief-step="-1"]').disabled=briefCardIndex===0;document.querySelector('[data-brief-step="1"]').disabled=briefCardIndex===cards.length-1;}
+ function go(index,smooth=true){briefCardIndex=Math.max(0,Math.min(cards.length-1,index));track.scrollTo({left:cards[briefCardIndex].offsetLeft-cards[0].offsetLeft,behavior:smooth?'smooth':'instant'});update();}
+ tabs.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>go(Number(b.dataset.briefCard))));
+ document.querySelectorAll('[data-brief-step]').forEach(b=>b.addEventListener('click',()=>go(briefCardIndex+Number(b.dataset.briefStep))));
+ track.addEventListener('scroll',()=>{if(!track.isConnected)return;briefCardIndex=cards.reduce((best,c,i)=>Math.abs(c.offsetLeft-cards[0].offsetLeft-track.scrollLeft)<Math.abs(cards[best].offsetLeft-cards[0].offsetLeft-track.scrollLeft)?i:best,0);update();},{passive:true});
+ track.tabIndex=0;track.addEventListener('keydown',e=>{if(e.target===track&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();go(briefCardIndex+(e.key==='ArrowRight'?1:-1));}});go(briefCardIndex,false);
 }
 async function loadNews(){try{const response=await fetch('data/news.json',{cache:'no-store'});if(!response.ok)throw new Error('No news');const snapshot=await response.json();if(!Array.isArray(snapshot.topics))throw new Error('Invalid news');newsBrief=snapshot;}catch{newsBrief={topics:[],koreaIndices:[]};}renderSummary();}
 function renderFear(){

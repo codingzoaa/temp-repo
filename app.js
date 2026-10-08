@@ -21,7 +21,7 @@ function periodValue(s,n){const h=s.history||[];if(h.length<n+1)return null;cons
 function cards(items){return items.map(s=>`<article class="card"><div class="card-label">${esc(s.name)}</div><div class="card-meta">${esc(s.symbol)} · ${esc(s.date)}</div><div class="value">${s.kind==='usd'?money(s.price):finite(s.price)?s.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+(s.kind==='yield'?'%':''):'—'}</div><div class="change ${cls(s.change)}">${s.change>=0?'▲':'▼'} ${signed(s.changePoints)}${s.kind==='yield'?'%p':` (${signed(s.change)}%)`}</div>${chart(s.history)}<div class="return-strip">${[[5,'1주'],[21,'1개월'],[63,'3개월']].map(([n,label])=>{const v=periodValue(s,n);return `<div><span>${label}</span><strong class="${cls(v)}">${signed(v)}${finite(v)?s.kind==='yield'?'%p':'%':''}</strong></div>`;}).join('')}</div></article>`).join('');}
 function renderRegime(){
  const r=data.regime||{};
- const el=document.querySelector('#regime-card');
+ const el=document.querySelector('#regime-card');if(!el)return;
  if(!r.label){el.className='regime-card empty-card';el.textContent='Market Regime 데이터 미수집';return;}
  el.className=`regime-card ${esc(r.tone||'neutral')}`;
  const signals=(r.signals||[]).map(s=>`<span class="signal ${s.positive?'good':'bad'}">${s.positive?'●':'○'} ${esc(s.name)}</span>`).join('');

@@ -33,6 +33,8 @@ jobs:
           node --test worker/test.mjs
       - name: Fetch free daily data
         run: python3 scripts/refresh_data.py
+      - name: Fetch S&P 500 heatmap
+        run: python3 scripts/refresh_heatmap.py
       - name: Fetch sector rotation and market sentiment
         run: python3 scripts/refresh_briefing.py
       - name: Fetch Korea US AI and data center briefing

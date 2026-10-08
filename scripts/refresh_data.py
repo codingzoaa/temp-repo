@@ -251,8 +251,6 @@ def main():
         candidates = [fetched[s["symbol"]] for s in eligible if s["symbol"] in fetched]
         out["leaders"] = sorted([s for s in candidates if s["monthReturn"] is not None], key=lambda s:s["monthReturn"], reverse=True)[:10]
         out["highs"] = sorted([s for s in candidates if s["newHigh"]], key=lambda s:s["marketCap"], reverse=True)
-        out["heatmap"] = [{k:s.get(k) for k in ("symbol","name","marketCap","sector","industry","price","change","date")}
-                          for s in sorted(candidates,key=lambda s:s["marketCap"],reverse=True)[:120]]
         out["breadth"] = build_breadth(candidates)
         incomplete = sum(not s["highHistoryComplete"] for s in candidates)
         if incomplete:
