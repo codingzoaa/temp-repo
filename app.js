@@ -1,6 +1,6 @@
 // Render collected observations only; never fall back to invented prices.
 let data={indices:[],assets:[],rates:{},sectors:[],breadth:{},regime:{},stocks:[],leaders:[],highs:[]};
-let period='1M';let breadthPeriod='3M';
+let period='1M';let breadthPeriod='3M';let breadthKey='advanceRatio';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const finite=n=>typeof n==='number'&&Number.isFinite(n);
 const signed=n=>finite(n)?`${n>=0?'+':''}${n.toFixed(2)}`:'—';
@@ -18,7 +18,16 @@ function chart(history=[],mini=false){
 }
 function stockLabel(s){return `<div class="stock"><span class="stock-icon">${esc(s.symbol.slice(0,2))}</span><div><strong>${esc(s.symbol)}</strong><small>${esc(s.name)}${s.date?' · '+esc(s.date):''}</small></div></div>`;}
 function periodValue(s,n){const h=s.history||[];if(h.length<n+1)return null;const current=h.at(-1).close,previous=h.at(-n-1).close;return s.kind==='yield'?current-previous:(current/previous-1)*100;}
-function cards(items){return items.map(s=>`<article class="card" role="button" tabindex="0" data-chart-symbol="${esc(s.symbol)}" aria-label="${esc(s.name)} 상세 차트 보기"><div class="card-label">${esc(s.name)}</div><div class="card-meta">${esc(s.symbol)} · ${esc(s.date)}</div><div class="value">${s.kind==='usd'?money(s.price):finite(s.price)?s.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+(s.kind==='yield'?'%':''):'—'}</div><div class="change ${cls(s.change)}">${s.change>=0?'▲':'▼'} ${signed(s.changePoints)}${s.kind==='yield'?'%p':` (${signed(s.change)}%)`}</div>${chart(s.history)}<div class="return-strip">${[[5,'1주'],[21,'1개월'],[63,'3개월']].map(([n,label])=>{const v=periodValue(s,n);return `<div><span>${label}</span><strong class="${cls(v)}">${signed(v)}${finite(v)?s.kind==='yield'?'%p':'%':''}</strong></div>`;}).join('')}</div></article>`).join('');}
+function cards(items){return items.map(s=>`<article class="card" role="button" tabindex="0" data-chart-symbol="${esc(s.symbol)}" aria-label="${esc(s.name)} 상세 차트 보기"><div class="card-label">${esc(s.name)}</div><div class="card-meta">${esc(s.symbol)} · ${esc(s.date)}</div><div class="value">${s.kind==='usd'?money(s.price):finite(s.price)?s.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+(s.kind==='yield'?'%':''):'—'}</div><div class="change ${cls(s.change)}">${s.change>=0?'▲':'▼'} ${s.kind==='yield'?signed(s.changePoints)+'%p':signed(s.change)+'%'}</div>${chart(s.history)}<div class="return-strip">${[[5,'1주'],[21,'1개월']].map(([n,label])=>{const v=periodValue(s,n);return `<div><span>${label}</span><strong class="${cls(v)}">${signed(v)}${finite(v)?s.kind==='yield'?'%p':'%':''}</strong></div>`;}).join('')}</div></article>`).join('');}
+function renderPulse(){
+ const el=document.querySelector('#market-pulse');if(!el)return;
+ const r=data.regime||{},nas=(data.indices||[]).find(s=>s.symbol==='^IXIC'),sox=(data.indices||[]).find(s=>s.symbol==='^SOX'),rate=data.rates?.tenYear,vix=(data.assets||[]).find(s=>s.symbol==='^VIX'),b=data.breadth||{};
+ const total=(b.advancers||0)+(b.decliners||0)+(b.unchanged||0),ratio=total?100*b.advancers/total:null;
+ const tone=r.label==='RISK ON'?'on':r.label==='RISK OFF'?'off':'neutral';
+ const summary=nas?.change<0&&sox?.change<0&&vix?.change>0&&ratio>=50?'주요 지수·반도체 약세와 VIX 상승이 겹칩니다. 상승 종목 비율은 높아 지수와 시장 폭이 엇갈립니다.':r.summary;
+ const metric=(label,value,sub,style='')=>`<div><span>${label}</span><strong class="${style}">${value}</strong><small>${sub}</small></div>`;
+ el.innerHTML=`<div class="pulse-intro"><div><span class="pulse-status ${tone}">${esc(r.label||'관측 대기')}</span><h2>오늘의 시장 신호</h2><p>${esc(summary||'데이터를 가져오면 주요 지수·금리·시장 폭을 함께 보여드립니다.')}</p></div><a href="#market-group">시장 흐름 자세히 ↗</a></div><div class="pulse-metrics">${metric('NASDAQ',nas?signed(nas.change)+'%':'—',nas?esc(nas.date)+' 종가':'미수집',nas?cls(nas.change):'')}${metric('SOX',sox?signed(sox.change)+'%':'—',sox?esc(sox.date)+' 종가':'미수집',sox?cls(sox.change):'')}${metric('미국 10년물',rate?rate.price.toFixed(2)+'%':'—',rate?esc(rate.date)+' · '+signed(rate.changePoints)+'%p':'미수집')}${metric('VIX',vix?vix.price.toFixed(2):'—',vix?esc(vix.date)+' · '+signed(vix.change)+'%':'미수집')}${metric('상승 종목 비율',pct(ratio),total?'시총 $10B 이상 · '+total+'종목':'미수집')}</div><details class="pulse-method"><summary>요약 판단 기준</summary><p>Nasdaq·SOX 상승, VIX 하락, 상승 종목 수 우위, 50일 이동평균 상회 비율 55% 이상을 각각 한 신호로 봅니다. 관측된 신호의 70% 이상이 충족되면 RISK ON, 30% 이하면 RISK OFF, 나머지는 NEUTRAL입니다. 지연된 일별 관측을 요약하며 매수·매도 신호가 아닙니다.</p></details>`;
+}
 function renderRegime(){
  const r=data.regime||{};
  const el=document.querySelector('#regime-card');if(!el)return;
@@ -38,10 +47,11 @@ function renderLegacySectors(){
 function breadthChart(points,keys,percent=false){
  const values=points.flatMap(p=>keys.map(k=>p[k])).filter(finite);
  if(points.length<2||values.length<2)return '<div class="breadth-trend-empty">계산 가능한 과거 이력이 부족합니다.</div>';
+ const chartWidth=Math.max(300,(document.querySelector('#breadth-chart')?.clientWidth||746)-46),right=chartWidth-25;
  const max=percent?100:Math.max(1,...values),colors=['#6574df','#9c627b'];
  const labels={advancers:'상승',decliners:'하락',advanceRatio:'상승 비율',above20:'20DMA 상회',above50:'50DMA 상회',above200:'200DMA 상회',newHighs:'52주 신고가',newLows:'52주 신저가'};
- let lines='';keys.forEach((key,j)=>{let segment=[];const flush=()=>{if(segment.length>1)lines+=`<polyline points="${segment.join(' ')}" fill="none" stroke="${colors[j]}" stroke-width="2" vector-effect="non-scaling-stroke"/>`;segment=[];};points.forEach((p,i)=>{if(!finite(p[key])){flush();return;}const x=26+i/(points.length-1)*170,y=86-p[key]/max*70;segment.push(`${x},${y}`);lines+=`<circle cx="${x}" cy="${y}" r="2" fill="${colors[j]}"><title>${esc(p.date)} · ${labels[key]} ${percent?p[key].toFixed(1)+'%':p[key]+'종목'} · 계산 표본 ${key.startsWith('above')?p['eligible'+key.slice(5)]:key.startsWith('new')?p.highEligible:p.measured}종목</title></circle>`;});flush();});
- return `<div class="breadth-trend" data-observations="${points.length}"><div class="breadth-chart-key">${keys.map((k,i)=>`<span style="color:${colors[i]}">${labels[k]}</span>`).join('')}</div><svg viewBox="0 0 205 105" role="img" aria-label="${esc(keys.map(k=>labels[k]).join('·'))} ${esc(points[0].date)}부터 ${esc(points.at(-1).date)} 추이"><path d="M26 16H196 M26 51H196 M26 86H196" stroke="#e9edf5" stroke-width="1"/><text x="1" y="20">${percent?'100%':Math.ceil(max)}</text><text x="8" y="89">0</text>${lines}</svg><div class="breadth-chart-dates"><span>${esc(points[0].date.slice(5))}</span><span>${esc(points.at(-1).date.slice(5))}</span></div></div>`;
+ let lines='';keys.forEach((key,j)=>{let segment=[];const flush=()=>{if(segment.length>1)lines+=`<polyline points="${segment.join(' ')}" fill="none" stroke="${colors[j]}" stroke-width="2" vector-effect="non-scaling-stroke"/>`;segment=[];};points.forEach((p,i)=>{if(!finite(p[key])){flush();return;}const x=50+i/(points.length-1)*(right-50),y=180-p[key]/max*150;segment.push(`${x},${y}`);lines+=`<circle cx="${x}" cy="${y}" r="2" fill="${colors[j]}"><title>${esc(p.date)} · ${labels[key]} ${percent?p[key].toFixed(1)+'%':p[key]+'종목'} · 계산 표본 ${key.startsWith('above')?p['eligible'+key.slice(5)]:key.startsWith('new')?p.highEligible:p.measured}종목</title></circle>`;});flush();});
+ return `<div class="breadth-trend" data-observations="${points.length}"><div class="breadth-chart-key">${keys.map((k,i)=>`<span style="color:${colors[i]}">${labels[k]}</span>`).join('')}</div><svg viewBox="0 0 ${chartWidth} 220" role="img" aria-label="${esc(keys.map(k=>labels[k]).join('·'))} ${esc(points[0].date)}부터 ${esc(points.at(-1).date)} 추이"><path d="M50 30H${right} M50 105H${right} M50 180H${right}" stroke="#e9edf5" stroke-width="1"/><text x="3" y="34">${percent?'100%':Math.ceil(max)}</text><text x="20" y="184">0</text>${lines}</svg><div class="breadth-chart-dates"><span>${esc(points[0].date.slice(5))}</span><span>${esc(points.at(-1).date.slice(5))}</span></div></div>`;
 }
 function breadthMetric(label,value,sub='',graph=''){
  return `<article class="breadth-metric"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(sub)}</small>${graph}</article>`;
@@ -52,14 +62,16 @@ function renderBreadth(){
  const ratio=total?100*(b.advancers||0)/total:null;
  const selectedHistory=(b.history||[]).slice(breadthPeriod==='1M'?-21:-63);
  const trend=(keys,percent=false)=>breadthChart(selectedHistory,keys,percent);
+ const shared=document.querySelector('#breadth-chart');if(shared)shared.innerHTML=trend([breadthKey],!breadthKey.startsWith('new'));
+ const selector=document.querySelector('#breadth-metric-select');if(selector)selector.value=breadthKey;
  const periodStatus=document.querySelector('#breadth-period-status');if(periodStatus)periodStatus.textContent=selectedHistory.length?`${breadthPeriod==='1M'?'1개월':'3개월'} · ${selectedHistory.length}거래일 · ${selectedHistory[0].date} ~ ${selectedHistory.at(-1).date}`:'과거 이력 수집 대기';
  document.querySelector('#breadth-grid').innerHTML=[
-  breadthMetric('상승 종목 비율',pct(ratio),`상승 ${b.advancers} / 전체 ${total}종목`,trend(['advanceRatio'],true)),
-  breadthMetric('20DMA 상회',pct(b.above20),'단기 추세',trend(['above20'],true)),
-  breadthMetric('50DMA 상회',pct(b.above50),'중기 추세',trend(['above50'],true)),
-  breadthMetric('200DMA 상회',pct(b.above200),'장기 추세',trend(['above200'],true)),
-  breadthMetric('52주 신고가',String(b.newHighs??'—'),'종가 기준',trend(['newHighs'])),
-  breadthMetric('52주 신저가',String(b.newLows??'—'),'종가 기준',trend(['newLows']))
+  breadthMetric('상승 종목 비율',pct(ratio),`상승 ${b.advancers} / 전체 ${total}종목`),
+  breadthMetric('20DMA 상회',pct(b.above20),'단기 추세'),
+  breadthMetric('50DMA 상회',pct(b.above50),'중기 추세'),
+  breadthMetric('200DMA 상회',pct(b.above200),'장기 추세'),
+  breadthMetric('52주 신고가',String(b.newHighs??'—'),'종가 기준'),
+  breadthMetric('52주 신저가',String(b.newLows??'—'),'종가 기준')
  ].join('');
  document.querySelector('#breadth-note').textContent=`${b.scope||'수집 유니버스'} · 분석 ${b.count}종목. 현재 시총 $10B 이상 수집 종목의 과거 가격으로 재계산한 표본형 추이입니다. 과거 구성·시총 기준의 시장 전체 통계가 아닙니다. 계산 가능한 종목 수는 날짜와 지표별로 다릅니다.`;
 }
@@ -69,7 +81,7 @@ function renderVolume(){
  document.querySelector('#empty').hidden=rows.length>0;document.querySelector('#empty').textContent=data.stocks.length?'검색 결과가 없습니다.':'거래대금 데이터가 아직 수집되지 않았습니다.';
 }
 function render(){
- renderRegime();
+ renderPulse();renderRegime();
  document.querySelector('#indices').innerHTML=cards(data.indices)||'<p>지수 데이터 미수집</p>';
  renderRates();
  document.querySelector('#assets').innerHTML=cards(data.assets)||'<p>주요 자산 데이터 미수집</p>';
@@ -103,4 +115,5 @@ async function load(){
  render();
 }
 document.querySelectorAll('[data-breadth-period]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.breadthPeriod===breadthPeriod));b.addEventListener('click',()=>{breadthPeriod=b.dataset.breadthPeriod;document.querySelectorAll('[data-breadth-period]').forEach(button=>{const selected=button.dataset.breadthPeriod===breadthPeriod;button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));});renderBreadth();});});
+document.querySelector('#breadth-metric-select')?.addEventListener('change',event=>{breadthKey=event.target.value;renderBreadth();});
 load();

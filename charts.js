@@ -16,7 +16,7 @@ function showQuoteChart(){
  document.querySelector('#quote-chart-source').textContent=`${item.symbol} · ${item.source||'Yahoo Finance'} · ${item.date} 기준`;
  const history=item.history||[];const end=Date.parse(history.at(-1)?.date),days={'1M':31,'3M':92,'1Y':365}[quoteChartPeriod];
  const points=history.filter(p=>Date.parse(p.date)>=end-days*86400000);
- document.querySelector('#quote-chart-content').innerHTML=detailedChart(points,{name:item.name,unit:item.kind==='yield'?'%':item.kind==='usd'?' USD':''});
+ document.querySelector('#quote-chart-content').innerHTML=`<div class="quote-detail-returns">${[[5,'1주'],[21,'1개월'],[63,'3개월']].map(([n,label])=>{const value=periodValue(item,n);return `<span>${label} <b class="${cls(value)}">${signed(value)}${finite(value)?item.kind==='yield'?'%p':'%':''}</b></span>`;}).join('')}</div>`+detailedChart(points,{name:item.name,unit:item.kind==='yield'?'%':item.kind==='usd'?' USD':''});
  document.querySelectorAll('[data-chart-period]').forEach(b=>{const selected=b.dataset.chartPeriod===quoteChartPeriod;b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',String(selected));});
 }
 function openQuoteChart(symbol){const item=[...(data.indices||[]),...(data.assets||[]),...Object.values(data.rates||{})].find(s=>s?.symbol===symbol);if(!item)return;quoteChartItem=item;quoteChartPeriod='3M';showQuoteChart();document.querySelector('#quote-chart-dialog').showModal();}
