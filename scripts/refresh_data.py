@@ -265,6 +265,10 @@ def main():
     except Exception as error:
         request_failed = True
         out["warnings"].append(f"Nasdaq: {error}")
+    for symbol,name,field in [('^NDX','나스닥 100','closingIndices'),('DX-Y.NYB','달러 인덱스','closingMacro')]:
+        out.setdefault(field,[])
+        try:out[field].append(get_chart(symbol,name,'index'))
+        except Exception:out['warnings'].append(f'{symbol}: optional closing briefing observation unavailable')
     out["regime"]=build_regime(out)
     destination = ROOT / "data" / "market.json"
     if not (out["indices"] or out["assets"] or out["stocks"]):
