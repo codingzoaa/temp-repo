@@ -124,17 +124,20 @@ def treasury_rates(now=None):
             date = dt.datetime.fromisoformat(raw_date.replace("Z","+00:00")).date().isoformat()
         except ValueError:
             continue
-        rows.append({"date":date,"y2":y2,"y10":y10,"spread":y10-y2})
+        rows.append({"date":date,"y2":y2,"y10":y10,"spread":y10-y2,"y30":number(values.get("BC_30YEAR"))})
     rows.sort(key=lambda r:r["date"])
     if len(rows) < 2:
         raise ValueError("Treasury yield curve history unavailable")
     def series(key, name):
-        hist=[{"date":r["date"],"close":r[key]} for r in rows]
+        hist=[{"date":r["date"],"close":r[key]} for r in rows if r.get(key) is not None]
         return {"symbol":key.upper(),"name":name,"kind":"yield","price":hist[-1]["close"],
                 "change":hist[-1]["close"]-hist[-2]["close"],"changePoints":hist[-1]["close"]-hist[-2]["close"],
                 "date":hist[-1]["date"],"history":hist,"source":"U.S. Treasury"}
-    return {"twoYear":series("y2","미국 2년물 금리"),"tenYear":series("y10","미국 10년물 금리"),
+    result = {"twoYear":series("y2","미국 2년물 금리"),"tenYear":series("y10","미국 10년물 금리"),
             "spread":series("spread","10Y-2Y 금리차")}
+    if sum(r.get("y30") is not None for r in rows)>=2:
+        result["thirtyYear"]=series("y30","미국 30년물 금리")
+    return result
 
 def screener():
     summary = fetch("https://api.nasdaq.com/api/screener/stocks?tableonly=true&limit=1&offset=0").get("data") or {}

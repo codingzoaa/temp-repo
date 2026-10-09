@@ -17,6 +17,16 @@ def payload(count=260):
                        'adjclose': [{'adjclose': list(range(100,100+count))}]}}], 'error': None}}
 
 class CollectorTests(unittest.TestCase):
+    def test_treasury_thirty_year_and_missing_observation(self):
+        xml='<feed>'+''.join(f'<entry><NEW_DATE>2026-10-0{i}</NEW_DATE><BC_2YEAR>4.7</BC_2YEAR><BC_10YEAR>5.2</BC_10YEAR>{extra}</entry>' for i,extra in [(5,'<BC_30YEAR>5.4</BC_30YEAR>'),(6,''),(7,'<BC_30YEAR>5.5</BC_30YEAR>')])+'</feed>'
+        with patch.object(refresh,'fetch_text',return_value=xml):
+            rates=refresh.treasury_rates()
+        self.assertEqual(rates['thirtyYear']['symbol'],'Y30')
+        self.assertEqual(len(rates['thirtyYear']['history']),2)
+        self.assertEqual(rates['thirtyYear']['date'],'2026-10-07')
+        self.assertAlmostEqual(rates['thirtyYear']['changePoints'],.1)
+        self.assertEqual(len(rates['tenYear']['history']),3)
+
     def test_number(self):
         self.assertEqual(refresh.number('$1,234.50'),1234.5)
         self.assertEqual(refresh.number('10B'),10e9)

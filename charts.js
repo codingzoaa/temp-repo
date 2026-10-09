@@ -20,7 +20,7 @@ function showQuoteChart(){
 }
 function openQuoteChart(symbol){document.querySelector('.chart-footnote').hidden=false;document.querySelector('.quote-chart-periods').hidden=false;const item=[...(data.indices||[]),...(data.assets||[]),...Object.values(data.rates||{})].find(s=>s?.symbol===symbol);if(!item)return;quoteChartItem=item;quoteChartPeriod='3M';showQuoteChart();document.querySelector('#quote-chart-dialog').showModal();}
 document.addEventListener('click',event=>{
- const full=event.target.closest('[data-brief-text]');if(full){document.querySelector('.chart-footnote').hidden=true;quoteChartItem=null;document.querySelector('#quote-chart-title').textContent='브리핑 전문';document.querySelector('#quote-chart-source').textContent='카드에 표시된 요약의 전체 문장';document.querySelector('.quote-chart-periods').hidden=true;document.querySelector('#quote-chart-content').innerHTML='<p class="brief-full-paragraph">'+esc(full.dataset.briefText)+'</p>';document.querySelector('#quote-chart-dialog').showModal();return;}
+
  const card=event.target.closest('[data-chart-symbol]');if(card){openQuoteChart(card.dataset.chartSymbol);return;}
  const sentiment=event.target.closest('[data-sentiment-chart]');if(sentiment&&!event.target.closest('a')){openSentimentChart(sentiment.dataset.sentimentChart);return;}
  const period=event.target.closest('[data-chart-period]');if(period){quoteChartPeriod=period.dataset.chartPeriod;showQuoteChart();}
