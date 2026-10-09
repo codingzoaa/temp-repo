@@ -52,13 +52,13 @@ function setupBriefCards(){
  const cards=[...track.querySelectorAll('.editorial-section')],tabs=document.querySelector('.brief-card-tabs');
  const names={'CLOSING MARKETS':'지수','AI FOCUS':'AI·반도체','GLOBAL HEADLINES':'글로벌 뉴스',"TODAY'S SUMMARY":'한눈에 보기',"TODAY'S ISSUE":'주요 이슈','SECTOR FOCUS':'섹터','RATES WATCH':'채권·자산','MARKET & AI BRIEF':'시장·AI','COMPANY NEWS':'기업','DATA & SCHEDULE':'일정'};
  tabs.innerHTML=cards.map((card,i)=>`<button type="button" data-brief-card="${i}" aria-label="${esc(card.querySelector('.editorial-label').textContent)}">${names[card.querySelector('.editorial-label').textContent]||i+1}</button>`).join('');
- function update(){tabs.querySelectorAll('button').forEach((b,i)=>{b.classList.toggle('selected',i===briefCardIndex);b.setAttribute('aria-pressed',String(i===briefCardIndex));});document.querySelector('[data-brief-step="-1"]').disabled=briefCardIndex===0;document.querySelector('[data-brief-step="1"]').disabled=briefCardIndex===cards.length-1;}
+ function update(){tabs.querySelectorAll('button').forEach((b,i)=>{b.classList.toggle('selected',i===briefCardIndex);b.setAttribute('aria-pressed',String(i===briefCardIndex));});document.querySelector('[data-brief-step="-1"]').disabled=briefCardIndex===0;document.querySelector('[data-brief-step="1"]').disabled=briefCardIndex===cards.length-1;fit();}
  function go(index,smooth=true){briefCardIndex=Math.max(0,Math.min(cards.length-1,index));track.scrollTo({left:cards[briefCardIndex].offsetLeft-cards[0].offsetLeft,behavior:smooth?'smooth':'instant'});update();}
  tabs.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>go(Number(b.dataset.briefCard))));
  document.querySelectorAll('[data-brief-step]').forEach(b=>b.addEventListener('click',()=>go(briefCardIndex+Number(b.dataset.briefStep))));
  track.addEventListener('scroll',()=>{if(!track.isConnected)return;briefCardIndex=cards.reduce((best,c,i)=>Math.abs(c.offsetLeft-cards[0].offsetLeft-track.scrollLeft)<Math.abs(cards[best].offsetLeft-cards[0].offsetLeft-track.scrollLeft)?i:best,0);update();},{passive:true});
  track.tabIndex=0;track.addEventListener('keydown',e=>{if(e.target===track&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();go(briefCardIndex+(e.key==='ArrowRight'?1:-1));}});go(briefCardIndex,false);
- const fit=()=>{cards.forEach(c=>c.style.height='auto');const height=Math.max(...cards.map(c=>c.getBoundingClientRect().height));cards.forEach(c=>c.style.height=Math.ceil(height)+'px');};
+ function fit(){cards.forEach(c=>c.style.height='auto');track.style.height=Math.ceil(cards[briefCardIndex].getBoundingClientRect().height)+'px';}
  fit();if(typeof ResizeObserver!=='undefined'){briefResizeObserver?.disconnect();briefResizeObserver=new ResizeObserver(fit);briefResizeObserver.observe(track);}
 }
 async function loadNews(){try{const response=await fetch('data/news.json',{cache:'no-store'});if(!response.ok)throw new Error('No news');const snapshot=await response.json();if(!Array.isArray(snapshot.topics))throw new Error('Invalid news');newsBrief=snapshot;}catch{newsBrief={topics:[],koreaIndices:[]};}renderSummary();}
