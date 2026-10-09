@@ -269,6 +269,10 @@ def main():
         out.setdefault(field,[])
         try:out[field].append(get_chart(symbol,name,'index'))
         except Exception:out['warnings'].append(f'{symbol}: optional closing briefing observation unavailable')
+    out['aiStocks']=[]
+    for symbol,name in [('NVDA','엔비디아'),('AMD','AMD'),('MU','마이크론'),('AVGO','브로드컴'),('INTC','인텔'),('ORCL','오라클')]:
+        try:out['aiStocks'].append(get_chart(symbol,name))
+        except Exception:out['warnings'].append(f'{symbol}: AI briefing observation unavailable')
     out["regime"]=build_regime(out)
     destination = ROOT / "data" / "market.json"
     if not (out["indices"] or out["assets"] or out["stocks"]):
