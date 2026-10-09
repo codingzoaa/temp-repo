@@ -18,8 +18,9 @@ function showQuoteChart(){
  document.querySelector('#quote-chart-content').innerHTML=`<div class="quote-detail-returns">${[[5,'1주'],[21,'1개월'],[63,'3개월']].map(([n,label])=>{const value=periodValue(item,n);return `<span>${label} <b class="${cls(value)}">${signed(value)}${finite(value)?item.kind==='yield'?'%p':'%':''}</b></span>`;}).join('')}</div>`+detailedChart(points,{name:item.name,unit:item.kind==='yield'?'%':item.kind==='usd'?' USD':''});
  document.querySelectorAll('[data-chart-period]').forEach(b=>{const selected=b.dataset.chartPeriod===quoteChartPeriod;b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',String(selected));});
 }
-function openQuoteChart(symbol){document.querySelector('.quote-chart-periods').hidden=false;const item=[...(data.indices||[]),...(data.assets||[]),...Object.values(data.rates||{})].find(s=>s?.symbol===symbol);if(!item)return;quoteChartItem=item;quoteChartPeriod='3M';showQuoteChart();document.querySelector('#quote-chart-dialog').showModal();}
+function openQuoteChart(symbol){document.querySelector('.chart-footnote').hidden=false;document.querySelector('.quote-chart-periods').hidden=false;const item=[...(data.indices||[]),...(data.assets||[]),...Object.values(data.rates||{})].find(s=>s?.symbol===symbol);if(!item)return;quoteChartItem=item;quoteChartPeriod='3M';showQuoteChart();document.querySelector('#quote-chart-dialog').showModal();}
 document.addEventListener('click',event=>{
+ const full=event.target.closest('[data-brief-text]');if(full){document.querySelector('.chart-footnote').hidden=true;quoteChartItem=null;document.querySelector('#quote-chart-title').textContent='브리핑 전문';document.querySelector('#quote-chart-source').textContent='카드에 표시된 요약의 전체 문장';document.querySelector('.quote-chart-periods').hidden=true;document.querySelector('#quote-chart-content').innerHTML='<p class="brief-full-paragraph">'+esc(full.dataset.briefText)+'</p>';document.querySelector('#quote-chart-dialog').showModal();return;}
  const card=event.target.closest('[data-chart-symbol]');if(card){openQuoteChart(card.dataset.chartSymbol);return;}
  const sentiment=event.target.closest('[data-sentiment-chart]');if(sentiment&&!event.target.closest('a')){openSentimentChart(sentiment.dataset.sentimentChart);return;}
  const period=event.target.closest('[data-chart-period]');if(period){quoteChartPeriod=period.dataset.chartPeriod;showQuoteChart();}
@@ -31,6 +32,7 @@ function chartPointer(event){const chart=event.target.closest('.detail-chart');i
 document.addEventListener('pointermove',chartPointer);document.addEventListener('pointerdown',chartPointer);
 
 function openSentimentChart(key){
+ document.querySelector('.chart-footnote').hidden=false;
  const fg=briefing.fearGreed,item=key==='fear'?fg:fg?.putCall;
  const name=key==='fear'?'Fear & Greed Index':'5-day average put/call ratio';
  quoteChartItem=null;
