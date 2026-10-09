@@ -29,7 +29,7 @@ async function run(response){
  assert.match(el('#breadth-grid').innerHTML,/상승 종목 비율/);
  for(const [i,count] of [[0,21],[1,63],[0,21],[1,63]]){breadthButtons[i].events.click();assert.match(el('#breadth-chart').innerHTML,new RegExp('data-observations="'+count+'"'));assert.match(el('#breadth-period-status').textContent,new RegExp(count+'거래일'));}
  assert.ok(!el('#breadth-grid').innerHTML.includes('<svg'));
- assert.match(el('#market-pulse').innerHTML,/RISK ON/);
+ assert.ok(!fs.readFileSync('index.html','utf8').includes('id="market-pulse"'));
  el('#breadth-metric-select').value='newHighs';el('#breadth-metric-select').events.change({target:el('#breadth-metric-select')});assert.match(el('#breadth-chart').innerHTML,/52주 신고가/);
  const before=el('#indices').innerHTML;buttons[2].events.click();assert.notEqual(el('#indices').innerHTML,before);
  el('#search').value='missing';el('#search').events.input();assert.equal(el('#empty').hidden,false);assert.equal(el('#volume-body').innerHTML,'');
